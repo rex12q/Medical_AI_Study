@@ -42,7 +42,10 @@ X_train,X_test,Y_train,Y_test=train_test_split(X,Y,test_size=0.25,random_state=4
 
 doctor=make_pipeline(
     StandardScaler(),
-    SVC(probability=True))
+    SVC(probability=True,
+    kernel='rbf'))
+#kernel:'커널 트릭' 2d에서 3d로 붕 띄워 올린 다음 기괴한 형태의 경계선도 거침없이 그려냄
+#->그러나 너무 무거운 기술이기에 엉뚱한 오진을 남길 수 있으니 잘 써야 함
 
 doctor.fit(X_train,Y_train)
 
