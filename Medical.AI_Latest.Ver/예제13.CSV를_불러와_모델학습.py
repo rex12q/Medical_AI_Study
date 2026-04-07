@@ -13,7 +13,7 @@ df = pd.read_csv('My first patients.csv')
 
 #csv파일에는 diabetes_target(당뇨 판정[0|1])이 없기에 for문으로 누적 시스템을 셋팅
 risk_data=[]
-for t in range(len(df)): #df의 형식은 거대한 pd표이다 그러므로 len()으로 나타내서 쓰자
+for t in range(len(df)): #df의 형식은 거대한 pd행렬이다 그러므로 len()으로 나타내서 쓰자
     if 70 <= df["glucose"][t] <= 200 and df["bmi"][t] >= 25.5: #예제8을 보면 "glucose"라 표시가 되어있기에 df[]그대로 가져옴.
         #Glucose: 70~200이상
         #배열 개념을 생각해보자.. []<-이걸로 받기
