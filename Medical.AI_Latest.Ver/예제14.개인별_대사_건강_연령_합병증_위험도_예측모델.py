@@ -136,7 +136,7 @@ while True:
     elif Upred_data == 1:
         print('User status: Danger')
         print(f'Positive Predict Probability{Uproba_data*100:.2f}%')
-        print(f"Model predicts that user's body age{Ureg_data:.0f}old")
+        print(f"Model predicts user's body age{Ureg_data:.0f}old")
     else:
         print("Model can't measure user status ")
     while True:
