@@ -54,7 +54,7 @@ def classtify_bp(systolic_bp,diatolic_bp):
         return('혈압 정상 단계!')
     elif systolic_bp<=129 and diatolic_bp<=89:
         return('고혈압 의심 1단계!')
-    elif systolic_bp>=139 and diatolic_bp<=99:
+    elif systolic_bp<=139 and diatolic_bp<=99:
         return('고혈압 2단계!')
     elif systolic_bp<=140 and diatolic_bp<=119:
         return('고혈압 3단계! 의사랑 상담 필요!')
@@ -65,38 +65,26 @@ bp_result=classtify_bp(systolic_bp,diatolic_bp)
 
 #당뇨 예측 가능성 설계
 bmi_user_data=np.array([[age,bmi_result]])#2차원 배열
-pred1=Doctor.predict(bmi_user_data)#학습된 틀을 기반으로 유저 데이터 당뇨인지 아닌지 예측
-proba1=Doctor.predict_proba(bmi_user_data)# 유저 데이터 당뇨 예측 가능성 
+pred1=Doctor.predict(bmi_user_data)[0]#학습된 틀을 기반으로 유저 데이터 당뇨인지 아닌지 예측
+proba1=Doctor.predict_proba(bmi_user_data)[0][1]# 유저 데이터 당뇨 예측 가능성 
 
 #print(f'환자 정보:{bmi_user_data}') 배열 상태에서 값이 어떻게 나올지 궁금해서 써 봄
 
 print(f'환자 정보/ 나이:{age} bmi 값:{bmi_result} 혈압 단계: 아래 참고')
 
-if bmi_result<18.4:
+if bmi_result<18.5:
     print('환자의 bmi 정보:{0:.2f} 저체중 범위입니다.'.format(bmi_result))
-elif 18.5<bmi_result<22.9:
+elif bmi_result<23:
     print('환자의 bmi 정보:{0:.2f} 정상 범위입니다.'.format(bmi_result))
-elif 23<bmi_result<24.9:
+elif bmi_result<25:
     print('환자의 bmi 정보:{0:.2f} 과체중 범위입니다.'.format(bmi_result))
-elif 25<bmi_result<29:
+elif bmi_result<30:
     print('환자의 bmi 정보:{0:.2f} 비만 범위입니다.'.format(bmi_result))
 else:
     print('환자의 bmi 정보:{0:.2f} 비정상 범위입니다.'.format(bmi_result))
 
 if pred1 == 0:
-    def classtify_bp(systolic_bp,diatolic_bp):
-        if systolic_bp<=120 and diatolic_bp<=80:
-            return('혈압 정상 단계!')
-        elif systolic_bp<=129 and diatolic_bp<=89:
-            return('고혈압 의심 1단계!')
     print(f'당신은 정상이며 {bp_result} 단계 입니다.')
 else:
-    def classtify_bp(systolic_bp,diatolic_bp):
-        if systolic_bp<=139 and diatolic_bp<=99:
-            return('고혈압 2단계!')
-        elif systolic_bp<=140 and diatolic_bp<=119:
-            return('고혈압 3단계! 의사랑 상담 필요!')
-        else:
-            return('당장 입원 필요!')
     print(f'당신은 비정상이며 {bp_result} 단계 입니다.')
     print('그러므로 당뇨일 가능성을 보여드립니다. 결과:{0:.6f}'.format(proba1)) # X,y값의 환자 데이터가 부족하기에 소수점 6자리까지 부여. 연습용
