@@ -70,63 +70,114 @@ print('해석: MAE가 0.5라면 모델이 예측한 수치가 실제 환자의 H
 print('-'*50)
 
 #대체설문기반 (bp,glu,미세조정)
-def EstimateInfo():
-    print('건강 설문(y|n으로만 답해주세요!)')
-    #1.BP
-    while True:
-        s_d_bpQ=input('Q1.과거에 고혈압 진단을 받았거나, 현재 복용하는 혈압약이 있나요?(y|n)')
-        if s_d_bpQ == 'y':
-            #수축,이완기 나눠주기(고혈압 수치 부여)
-            est_sbp = 145.0
-            est_dbp =95.0
-            print('질문이 입력됐습니다!')
-            break
-        elif s_d_bpQ == 'n':
-            #수축,이완기 나눠주기(정상 수치 부여)
-            est_sbp = 120.0
-            est_dbp =80.0
-            print('질문이 입력됐습니다!')
-            break
-        else:
-            print('y,n으로만 대답해주세요')
-    #2.GLU
-    while True:
-        gluQ=input('최근 건강검진에서 "혈당 높음"이라는 진단을 받은 적이 있나요?(y|n)')
-        if gluQ == 'y':
-            est_glu=126.0
-            print('질문이 입력됐습니다!')
-            break
-        elif gluQ == 'n':
-            est_glu = 95.0
-            print('질문이 입력됐습니다!')
-            break
-        else:
-            print('y,n으로만 대답해주세요')
-    #3.미세조정
-    while True:
-        user_q=input('일주일에 3회 이상 땀이 나는 운동을 하나요? (y|n)')
-        if user_q == 'y':
-            est_sbp -= 5.0
-            est_dbp -= 5.0
-            print('질문이 입력됐습니다!')
-            break
-        elif user_q == 'n':
-            est_sbp += 5.0
-            est_dbp += 5.0
-            print('질문이 입력됐습니다!')
-            break
-        else:
-            print('y,n으로만 대답해주세요')
-    return est_sbp,est_dbp,est_glu
-#알면 직접 입력, 모르면 질문 받아서 데이터 입력
-def u_range(prompt,minVal,maxVal):
-    userQ=input('사용자는 본인의 정보를 직접 알고 있으면 y, 모르면 n을 눌러주세요: ')
-    try:
+while True:
+    def EstimateInfo():
+        print('건강 설문(y|n으로만 답해주세요!)')
+        #1.BP
         while True:
-            if minVal <= prompt <= maxVal:
-                return(prompt)
-            print('over range!')
-    except Exception as ex:
-        print(f'ERROR:{ex}')
-    if userQ == 'y':
-#26.4.13 구축 중...
+            s_d_bpQ=input('Q1.과거에 고혈압 진단을 받았거나, 현재 복용하는 혈압약이 있나요?(y|n)')
+            if s_d_bpQ == 'y':
+                #수축,이완기 나눠주기(고혈압 수치 부여)
+                est_sbp = 145.0
+                est_dbp =95.0
+                print('질문이 입력됐습니다!')
+                break
+            elif s_d_bpQ == 'n':
+                #수축,이완기 나눠주기(정상 수치 부여)
+                est_sbp = 120.0
+                est_dbp =80.0
+                print('질문이 입력됐습니다!')
+                break
+            else:
+                print('y,n으로만 대답해주세요')
+        #2.GLU
+        while True:
+            gluQ=input('최근 건강검진에서 "혈당 높음"이라는 진단을 받은 적이 있나요?(y|n)')
+            if gluQ == 'y':
+                est_glu=126.0
+                print('질문이 입력됐습니다!')
+                break
+            elif gluQ == 'n':
+                est_glu = 95.0
+                print('질문이 입력됐습니다!')
+                break
+            else:
+                print('y,n으로만 대답해주세요')
+        #3.미세조정
+        while True:
+            user_q=input('일주일에 3회 이상 땀이 나는 운동을 하나요? (y|n)')
+            if user_q == 'y':
+                est_sbp -= 5.0
+                est_dbp -= 5.0
+                print('질문이 입력됐습니다!')
+                break
+            elif user_q == 'n':
+                est_sbp += 5.0
+                est_dbp += 5.0
+                print('질문이 입력됐습니다!')
+                break
+            else:
+                print('y,n으로만 대답해주세요')
+        return est_sbp,est_dbp,est_glu
+    #알면 직접 입력, 모르면 질문 받아서 데이터 입력
+    def u_range(prompt,minVal,maxVal,fl0at=True):
+        while True:
+            try:
+                    Uvalue= float(input(prompt)) if fl0at else int(input(prompt))
+                    if minVal <= Uvalue <= maxVal:
+                        return(Uvalue)
+                    print('over range!')
+            except Exception as ex:
+                print(f'ERROR:{ex}')
+    while True:
+        #돌아갈 곳을 만들자
+        userQ=input('사용자는 본인의 정보를 직접 알고 있으면 y, 모르면 n을 눌러주세요: ')
+        if userQ == 'y':
+            print('입력됐습니다!')
+            u_sbp = u_range('수축기 혈압(SBP) 입력(Range:30~300):',30,300)
+            u_dbp = u_range('이완기 혈압(DBP) 입력(Range:30~200):',30,200)
+            u_glu = u_range('공복혈당(GLU) 입력(Range:10~400):',10,400)
+            break
+        elif userQ== 'n':
+            print('입력됐습니다!')
+            #정보 받기
+            u_sbp, u_dbp, u_glu = EstimateInfo()
+            break
+        else:
+            print('y|n으로만 대답해주세요')
+
+    u_age=u_range('나이를 입력해주세요(Range:0~100)',0,100,fl0at=False)
+    u_wc=u_range('허리 둘레 입력해주세요(Range:30~150)',0,150)
+    u_bmi=u_range('bmi 입력해주세요(Range:10~50)',10,50)
+
+    UserInfo={ #dictionary
+        'Age':[u_age],
+        'SBP':[u_sbp],
+        'DBP':[u_dbp],
+        'WC':[u_wc],
+        'BMI':[u_bmi],
+        'GLU':[u_glu]
+    } 
+    user_data=pd.DataFrame(UserInfo)
+    user_HbA=HbA_doctor.predict(user_data)[0] #<-사용자 HbA값 나타내기
+    if user_HbA < 6.0:
+        print(f'사용자 당화혈색소 범위: {user_HbA:.1f}')
+        print('정상입니다')
+    elif 6.0 <= user_HbA <= 6.4:
+        print(f'사용자 {user_HbA:.1f}')
+        print('당뇨 의심 단계입니다')
+    elif user_HbA >= 6.5:
+        print(f'사용자 당화혈색소 범위: {user_HbA:.1f}')
+        print('당뇨입니다')
+    while True:
+        YesNo = input('테스트를 다시 진행할까요? (y|n)')
+        if YesNo == 'y':
+            print('재시작!')
+            break #이 방 터트리고 위로 가기
+        elif YesNo == 'n':
+            print('종료')
+            break #터트리고 아래로 가기
+        else:
+            print('y|n만 입력')
+    if YesNo == 'n':
+        break #마지막으로 다 터트리고 끝
