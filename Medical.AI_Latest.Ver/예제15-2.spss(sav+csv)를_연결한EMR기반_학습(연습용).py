@@ -37,7 +37,7 @@ try:
         #meta~lables는 sav파일을 읽기 위한 거대한 사전(내장어)(순서: 이름,설명)|itmes():내용 가져오기
         label = ColLabel if ColLabel else '설명 없음'
         #사용자가 보고 싶어하는 label칸에 c_label(설명)을 넣어서 보여줌| 없는 경우: "설명 없음"으로 대체 
-        print(f'[{'설명'}]->{label}')
+        print(f'[설명]->{label}')
 except Exception as ex:
     print(f'에러 발생: {ex}')
 
