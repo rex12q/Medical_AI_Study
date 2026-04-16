@@ -11,10 +11,12 @@ from sklearn.impute import SimpleImputer
 
 #sav,csv
 sav_load = pt.read_sav('sav_file')
-if not os.path.exists (sav_load):
-    sav_load=pt.read_sav('sav_file')
+csv_file = pd.read_csv('csv_file')
+if not os.path.exists (csv_file):
+    sav_load,_=pt.read_sav('sav_file') 
     print('Converting...')
-    sav_load.to_csv('sav_load')
+    sav_load.to_csv(csv_file,index=False,encoding='utf~') #check 
+    #index = False: 내용이 없는 열에 번호 부여를 막을 수 있다. encoding=utf 한글 지원
     print('Convert')
 
 #sav->csv (사용자가 이미 이름을 바꿨다고 가정(csv))
@@ -22,7 +24,7 @@ csv_load=pd.read_csv('csv_file')
 #metadataonly
 try:
     _,meta=pt.read_sav('sav_file',metadataonly=True) #틀은 제외하고 핵심내용인 Metadata만 챙긴다
-    for c_name,c_label in meta.columns_names_to_labels.items(): #제목,내용을 meta를 통해 가져온다
+    for c_name,c_label in meta.column_names_to_labels.items(): #제목,내용을 meta를 통해 가져온다
         label=c_label if c_label else 'Not explanation' #(설명=설명) <- 없는 알맹이들 걸러내기
         print('Access!')
     print('!')
