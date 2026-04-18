@@ -1,5 +1,5 @@
-#본 EMR은 한림대학교 '확률과 통계' 수업 시간 때 제공받은 병원 데이터를 가져온 것이므로 무단으로 유포하지 않을 것을 선서합니다.
-#사용자는 EMR을 함부로 유포하면 국내 의료법에 의거하여 법적 처벌을 받을 수 있다는 것을 인지합니다.
+#본 EMR데이터는 XX대학교  극히 일부분 '틀'(내용X)을 가지고 진행했음을 알립니다
+# 절대 실제 환자의 기록을 토대로 학습을 하지 않았으며 이를 가지고 유포하거나 타인에게 공유할 시, 국내 의료법에 위반된다는 걸 인지하고 있습니다.
 #%%
 import seaborn as sns
 #seaborn: matplotlib 기반 업그레이드 통계 특화 버전(시각적 자료 퀄UP)
@@ -19,8 +19,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 
 #sav,csv (sav->csv를 한다는 가정하에)|(암기 목적으로 직접 다 타이핑)
-sav_file = 'Spss_sav/BP_Stat_Final_ExerData.sav'
-csv_file = 'BP_Stat_Final_ExerData.csv' #확장자를 바꾸기 -> to_csv를 통해 같이 바뀜
+sav_file = 'Spssp[sav]training.sav'
+csv_file = 'SpssTraining[csv]/training.csv' #확장자를 바꾸기 -> to_csv를 통해 같이 바뀜
 
 if not os.path.exists(csv_file):
     d_sav,_= pt.read_sav(sav_file)
@@ -32,14 +32,14 @@ if not os.path.exists(csv_file):
 try:
     _,meta = pt.read_sav(sav_file,metadataonly=True)
     for c_name,c_label in meta.column_names_to_labels.items():
-        label=c_label if c_label else 'Not Explanation'
-        print(f'Explanation: {label}')
+        label=c_label if c_label else ''Not Explaination'
+        print(f'Explaination: {label}')
         print('Complete load!')
 except Exception as e:
     print(f'ERROR: {e}')
 
 #csv
-csv_load = pd.read_csv('csv/[csv]BP_Stat_Final_ExerData.csv') #csv 파일 안에
+csv_load = pd.read_csv('SpssTraining[csv]/training.csv') #csv 파일 안에
 
 #굳이 LabelEncoder와 get_dummies를 쓰기(모르는 개념이니 공부)
 # #해당 sav파일은 인코딩이 되어있는 상태지만 학습을 위해 바꿔보자
