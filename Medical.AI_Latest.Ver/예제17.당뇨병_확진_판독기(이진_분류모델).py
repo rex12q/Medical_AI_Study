@@ -60,7 +60,7 @@ csv_load = pd.read_csv('SpssTraining[csv]/training.csv') #csv 파일 안에
 # #이렇게 되면 저체중:0,정상:1,비만:2가 '라벨'열에 들어가게 됨
 
 # #pd.get_dummies 원~핫 코딩(열 안에 있는 내용물을 '열'형태로 찢게 하기)
-# csv_load=pd.get_dummies(csv_load, columns=['BMI_글자'])
+# csv_load=pd.get_dummies(csv_load, columns=['BMI_라벨'])
 # #이렇게 되면 원본 파일을 담고 있는 csv_load에 'BMI_글자'가 글자_저체중,_정상,_비만 형태로 찢어지게 된다
 # # 여기서 사용자 정보 기반(예:사용자는 저체중)으로 모델을 돌리면 _저체중:1,_정상:0,_비만:0으로 열 형태가 유지가 된다.  
 
