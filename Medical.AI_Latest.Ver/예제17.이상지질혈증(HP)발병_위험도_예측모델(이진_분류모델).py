@@ -181,6 +181,140 @@ print(f'Model total precision: {f1*100:.2f}%') #정밀도(ML이 진짜라고 고
 # else:
 #     print("Model can't measure stats") #한 명을 대상으로 모델을 돌리는게 아니기에 주석처리
 print('Complete load from model')
-
+#1.Info
+def Info(prompt,q_type,choices=None,minVal=0,maxVal=150,is_int=True):
+#choices(None):선택 종류,(choices를 안 쓸 때는 그냥 없는 매개변수), q_type:질문 유형, min,max: 매개변수와 변수의 수가 같아야 하지만 값을 부여하므로 이를 방지
+    while True:
+        try:
+            userVal = input(prompt).strip().lower()#dictionary기준에 맞춰진다
+            #공장1. choice의 경우
+            if q_type == 'choice': #질문 유형 'choice'인 경우
+                if userVal in choices: # 사전을 기준으로 해서 정보 입력
+                    return choices[userVal]
+                print(f'True answer: {list(choices.keys())}') #사전 리스트 정보 불러오기
+            #공장2. range의 경우
+            elif q_type == 'range':
+                #if userVal in choices: 애초에 choices는 없음
+                userNum = int(prompt) if is_int else float(prompt)
+                if minVal <= userNum <= maxVal:
+                    return userNum
+                print(f'Over range! | Range: {minVal}~{maxVal}')
+        except ValueError:
+            print('Oops! try again')
+    
+#choice:객관식, range:주관식
+u_gen = Info(
+    prompt = 'What is your gender? (male|female):',
+    q_type = 'choice',
+    choices = {'male':1, 'female':2}, #dictionary 
+)
+u_age = Info(
+    prompt = 'How old are you? (Range: 0~150) :',
+    q_type = 'range',
+    minVal=0,maxVal=150
+)
+u_town = Info(
+    prompt = 'Where are you live now? (1:동|2:읍면)',
+    q_type = 'choice',
+    choices = {'동':1, '읍면':2}, #dictonary
+)
+u_edu = Info(
+    prompt = 'What is your the highest of university',
+    q_type = 'choice',
+    choices = {'E':1,'M':2,'H':3,'U':4}, #dictonary
+)
+#2.Body
+u_ht = Info(
+    prompt = 'Enter your height(HT):',
+    q_type = 'range',
+    minVal = 100, maxVal = 250,
+    is_int = True
+)
+u_wc = Info( #남성 기준
+    prompt = 'Enter your waist circumference(WC):',
+    q_type = 'range',
+    minVal = 40,
+    is_int = True
+)
+u_bmi = Info(
+    prompt = 'Enter your bmi:',
+    q_type = 'range',
+    minVal = 10 ,maxVal = 50,
+    is_int = True
+)
+#3.Blood
+u_sbp = Info(
+    prompt = 'Enter your systolic blood pressure:',
+    q_type = 'range',
+    minVal = 40 ,maxVal = 250,
+    is_int = True
+)
+u_dbp = Info(
+    prompt = 'Enter your diatolic blood pressure:',
+    q_type = 'range',
+    minVal = 40 ,maxVal = 180,
+    is_int = True
+)
+u_glu = Info(
+    prompt = 'Enter your glucose:',
+    q_type = 'range',
+    minVal = 50 ,maxVal = 170,
+    is_int = True
+)
+u_HbA = Info(
+    prompt = 'Enter your HbA:',
+    q_type = 'range',
+    minVal = 2 ,maxVal = 15,
+    is_int = True
+)
+u_dm = Info(
+    prompt = 'Enter your diabetes target(0:negative|1:positive)',
+    q_type = 'choice',
+    choices = {'0':0,'1':1},
+    is_int = True
+)
+#조건
+#gen,wc(남자,여자 허리둘레 정상,비만 기준이 다름)
+if u_gen == 1: # Male
+    if u_wc >= 90:
+        print("[Warning] Abdominal obesity detected. (High risk of metabolic syndrome)")
+    else: #복부 지방| 대사 증후군: 신진대사(대사)와 관련된 질환이 동반된다는 의미
+        print("Normal waist circumference.")
+elif u_gen == 2: # Female
+    if u_wc >= 85:
+        print("[Warning] Abdominal obesity detected. (High risk of metabolic syndrome)")
+    else:
+        print("Normal waist circumference.") 
+#bmi 
+if u_bmi >= 35.0:
+    print(f"[Danger] BMI: {u_bmi:.1f} - Obesity Class 3 (Extremely high risk). Immediate consultation recommended.")
+elif u_bmi >= 30.0:
+    print(f"[Warning] BMI: {u_bmi:.1f} - Obesity Class 2 (High risk).")
+elif u_bmi >= 25.0:
+    print(f"[Caution] BMI: {u_bmi:.1f} - Obesity Class 1 (Moderate risk).")
+elif u_bmi >= 23.0:
+    print(f"[Notice] BMI: {u_bmi:.1f} - Overweight (Pre-obesity stage).")
+elif u_bmi >= 18.5:
+    print(f"BMI: {u_bmi:.1f} - Normal weight.")
+else:
+    print(f"[Caution] BMI: {u_bmi:.1f} - Underweight. Nutritional management may be needed.")
+#blood pressure 
+if u_sbp >= 160 or u_dbp >= 100:
+    print("[Danger] Stage 2 Hypertension (High risk).")
+elif u_sbp >= 140 or u_dbp >= 90: #고혈압2
+    print("[Warning] Stage 1 Hypertension. Blood pressure management is required.")
+elif u_sbp >= 130 or u_dbp >= 80: #고혈압1
+    print("[Caution] Elevated Blood Pressure (Prehypertension).")
+elif u_sbp < 120 and u_dbp < 80: #전고혈압
+    print("Optimal normal blood pressure.")
+else: #최적 혈압
+    print("[Notice] Blood pressure is within the caution range.")
+#glucose 
+if u_glu >= 126:
+    print("[Danger] Suspected Diabetes. Fasting glucose is critically high.")
+elif u_glu >= 100: #당뇨의심
+    print("[Caution] Impaired Fasting Glucose (Pre-diabetes). Monitor your sugar intake.")
+else: #정상 공복 혈당| 
+    print("Normal fasting blood glucose.")
 # %%
-#26.4.20
+#26.4.21
