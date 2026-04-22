@@ -186,16 +186,17 @@ def Info(prompt,q_type,choices=None,minVal=0,maxVal=150,is_int=True):
 #choices(None):선택 종류,(choices를 안 쓸 때는 그냥 없는 매개변수), q_type:질문 유형, min,max: 매개변수와 변수의 수가 같아야 하지만 값을 부여하므로 이를 방지
     while True:
         try:
+            userVal = input(prompt).strip()#dictionary기준에 맞춰진다
             #공장1. choice의 경우
             if q_type == 'choice': #질문 유형 'choice'인 경우
-                userVal = input(prompt).strip().lower()#dictionary기준에 맞춰진다
                 if userVal in choices: # 사전을 기준으로 해서 정보 입력
                     return choices[userVal]
                 print(f'True answer: {list(choices.keys())}') #사전 리스트 정보 불러오기
             #공장2. range의 경우
             elif q_type == 'range':
                 #if userVal in choices: 애초에 choices는 없음
-                userNum = int(prompt) if is_int else float(prompt)
+                userNum = int(userVal) if is_int else float(userVal)
+                #prompt를 바꾸는게 아닌 userVal을 바꿔야 함
                 if minVal <= userNum <= maxVal:
                     return userNum
                 print(f'Over range! | Range: {minVal}~{maxVal}')
@@ -236,13 +237,13 @@ u_ht = Info(
     prompt = 'Enter your height(HT):',
     q_type = 'range',
     minVal = 100, maxVal = 250,
-    is_int = True
+    is_int = False
 )
 u_wc = Info( #남성 기준
     prompt = 'Enter your waist circumference(WC):',
     q_type = 'range',
     minVal = 40,
-    is_int = True
+    is_int = False
 )
 u_bmi = u_wt / ((u_ht/100)**2) # 계산 공식: 몸무게/키(100을 곱한 상태에서 제곱)
 # u_bmi = Info( 사용자가 임의로 bmi를 넣기 보단 계산 공식을 통해 bmi값을 출력
@@ -256,25 +257,25 @@ u_sbp = Info(
     prompt = 'Enter your systolic blood pressure:',
     q_type = 'range',
     minVal = 40 ,maxVal = 250,
-    is_int = True
+    is_int = False
 )
 u_dbp = Info(
     prompt = 'Enter your diatolic blood pressure:',
     q_type = 'range',
     minVal = 40 ,maxVal = 180,
-    is_int = True
+    is_int = False
 )
 u_glu = Info(
     prompt = 'Enter your glucose:',
     q_type = 'range',
     minVal = 50 ,maxVal = 170,
-    is_int = True
+    is_int = False
 )
 u_hba = Info(
     prompt = 'Enter your HbA:',
     q_type = 'range',
     minVal = 2 ,maxVal = 15,
-    is_int = True
+    is_int = False
 )
 u_dm = Info(
     prompt = 'Enter your diabetes target(0:negative|1:positive)',
@@ -341,12 +342,12 @@ else:#전 당뇨 단계, 라이프 스타일 바꾸기
     #평범한 당화혈색소 단계
 # DM(diabetes mellitus:당뇨병)
 if u_dm == 1:
-    print("📋 [Record] Prior history of diabetes noted. This will strongly affect the prediction.")
+    print("[Record] Prior history of diabetes noted. This will strongly affect the prediction.")
 else:#이전 당뇨 진료에 기록됨. 이것은 예측에 강하게 영향이 감
-    print("📋 [Record] No prior history of diabetes.")
+    print("[Record] No prior history of diabetes.")
     #당뇨에 관한 이전 진료 기록이 없음
 
-#13개의 변수 맞추기 | 위와 똑같이 info,body,blood로 나눠주기
+#13개의 변수 맞추기, PandasDataFrame으로 맞춰주기 | 위와 똑같이 info,body,blood로 나눠주기
 u_ageg = u_age//10 #AgeGroup /:flaot //:int
 UserInfo = {
     'Gender':[u_gen],
@@ -367,13 +368,27 @@ UserBlood = {
     'HbA':[u_hba],
     'DM':[u_dm]
 }
+#DF fit했을 때 액셀 표 형태로 학습을 시켰기에 딕셔너리를 주지 말고 df로 변환해서 하기
+df_UserInfo = pd.DataFrame(UserInfo)
+df_UserBody = pd.DataFrame(UserBody)
+df_UserBlood = pd.DataFrame(UserBlood)
+
 #피날레(각 파트 예측 확률 출력 및 합쳐서 최종 출력) f:finsh| [:,1]: 양성일 확률만 출력
-UserInfof = doctor_info.predict_proba(UserInfo)[:,1]
-UserBodyf = doctor_by.predict_proba(UserBody)[:,1]
-UserBloodf = doctor_bd.predict_proba(UserBlood)[:,1]
+UserInfof = doctor_info.predict_proba(df_UserInfo)[:,1]
+UserBodyf = doctor_by.predict_proba(df_UserBody)[:,1]
+UserBloodf = doctor_bd.predict_proba(df_UserBlood)[:,1] #df로 감싸준 자료 삽입
 
 UserTotal = (UserInfof + UserBodyf + UserBloodf / 3)
 UserProb = UserTotal[0] #[0]사용자 정보
+
+print('-'*50)
+print("EMR patients 'HP' information")
+print('-'*50)
+#seaborn
+sns.countplot(x='hp_target', data=csv_load)
+#countplot: seaborn내장어 기능 중 하나, 그룹별로 묶어서(ex:0,1)개수를 세서 막대그래프로 표현
+plt.title("EMR patients 'HP' information")
+plt.show()
 
 print('-'*50)
 print('Medical AI analysis complete!')
