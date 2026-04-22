@@ -80,11 +80,6 @@ pos_hp=csv_load['hp_target']
 #subset: '부분 집합'을 의미, 사용자가 선택한 행만 삭제|columns,subset차이->열과 행
 #dropna columns는 그냥 카테고리 통으로 없애는 거니깐 쓰면 안됨| (drop,columns),(dropna,subset)
 
-#seaborn
-sns.countplot(x='hp_target', data=csv_load)
-#countplot: seaborn내장어 기능 중 하나, 그룹별로 묶어서(ex:0,1)개수를 세서 막대그래프로 표현
-plt.show()
-
 #train_test
 #1.기본 인적 사항 (성별,나이,나이그룹): 호르몬 영향 콜레스트롤 수치 변화 양상
 #1-2.기본 인적 사항 (사는 지역, 교육 수준): 환경적 요인, 거주 지역에 따른 운동과 같은 활동량 확인
