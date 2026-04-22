@@ -186,9 +186,9 @@ def Info(prompt,q_type,choices=None,minVal=0,maxVal=150,is_int=True):
 #choices(None):선택 종류,(choices를 안 쓸 때는 그냥 없는 매개변수), q_type:질문 유형, min,max: 매개변수와 변수의 수가 같아야 하지만 값을 부여하므로 이를 방지
     while True:
         try:
-            userVal = input(prompt).strip().lower()#dictionary기준에 맞춰진다
             #공장1. choice의 경우
             if q_type == 'choice': #질문 유형 'choice'인 경우
+                userVal = input(prompt).strip().lower()#dictionary기준에 맞춰진다
                 if userVal in choices: # 사전을 기준으로 해서 정보 입력
                     return choices[userVal]
                 print(f'True answer: {list(choices.keys())}') #사전 리스트 정보 불러오기
@@ -203,6 +203,7 @@ def Info(prompt,q_type,choices=None,minVal=0,maxVal=150,is_int=True):
             print('Oops! try again')
     
 #choice:객관식, range:주관식
+#u_gen 같은 경우 Info 함수로 묶었으면 매개변수의 수가 맞아야 하지만 맞지 않기에 에러가 뜬다->(조치: 매개변수에 기본값을 부여)
 u_gen = Info(
     prompt = 'What is your gender? (male|female):',
     q_type = 'choice',
@@ -211,7 +212,7 @@ u_gen = Info(
 u_age = Info(
     prompt = 'How old are you? (Range: 0~150) :',
     q_type = 'range',
-    minVal=0,maxVal=150
+    minVal=0,maxVal=150 #조건에 쓰려는 값이 함수 매개변수의 값과 다를 경우 사용자가 바꿀 수 있다.
 )
 u_town = Info(
     prompt = 'Where are you live now? (1:동|2:읍면)',
@@ -224,6 +225,13 @@ u_edu = Info(
     choices = {'E':1,'M':2,'H':3,'U':4}, #dictonary
 )
 #2.Body
+#bmi는 wt,ht로 의학 공식 계산으로 값을 출력
+u_wt = Info(
+    prompt = 'Enter your weight(WT)',
+    q_type = 'range',
+    minVal = 10, maxVal = 250,
+    is_int = False
+)
 u_ht = Info(
     prompt = 'Enter your height(HT):',
     q_type = 'range',
@@ -236,12 +244,13 @@ u_wc = Info( #남성 기준
     minVal = 40,
     is_int = True
 )
-u_bmi = Info(
-    prompt = 'Enter your bmi:',
-    q_type = 'range',
-    minVal = 10 ,maxVal = 50,
-    is_int = True
-)
+u_bmi = u_wt / ((u_ht/100)**2) # 계산 공식: 몸무게/키(100을 곱한 상태에서 제곱)
+# u_bmi = Info( 사용자가 임의로 bmi를 넣기 보단 계산 공식을 통해 bmi값을 출력
+#     prompt = 'Enter your bmi:',
+#     q_type = 'range',
+#     minVal = 10 ,maxVal = 50,
+#     is_int = True
+# )
 #3.Blood
 u_sbp = Info(
     prompt = 'Enter your systolic blood pressure:',
@@ -261,7 +270,7 @@ u_glu = Info(
     minVal = 50 ,maxVal = 170,
     is_int = True
 )
-u_HbA = Info(
+u_hba = Info(
     prompt = 'Enter your HbA:',
     q_type = 'range',
     minVal = 2 ,maxVal = 15,
@@ -274,7 +283,7 @@ u_dm = Info(
     is_int = True
 )
 #조건
-#gen,wc(남자,여자 허리둘레 정상,비만 기준이 다름)
+#gen,wc(의학적 자료에 의하면 남자,여자 허리둘레 정상,비만 기준이 다름)
 if u_gen == 1: # Male
     if u_wc >= 90:
         print("[Warning] Abdominal obesity detected. (High risk of metabolic syndrome)")
@@ -283,38 +292,106 @@ if u_gen == 1: # Male
 elif u_gen == 2: # Female
     if u_wc >= 85:
         print("[Warning] Abdominal obesity detected. (High risk of metabolic syndrome)")
-    else:
+    else: #복부 지방이 발견됨. (대사 증후군 고위험)
         print("Normal waist circumference.") 
+        #평범한 허리 둘레
 #bmi 
 if u_bmi >= 35.0:
     print(f"[Danger] BMI: {u_bmi:.1f} - Obesity Class 3 (Extremely high risk). Immediate consultation recommended.")
-elif u_bmi >= 30.0:
+elif u_bmi >= 30.0: #비만 3단계 (매우 위험). 즉시 상담을 추천
     print(f"[Warning] BMI: {u_bmi:.1f} - Obesity Class 2 (High risk).")
-elif u_bmi >= 25.0:
+elif u_bmi >= 25.0: #비만 2단계 (고위험)
     print(f"[Caution] BMI: {u_bmi:.1f} - Obesity Class 1 (Moderate risk).")
-elif u_bmi >= 23.0:
+elif u_bmi >= 23.0: #비만 1단계 (중위험)
     print(f"[Notice] BMI: {u_bmi:.1f} - Overweight (Pre-obesity stage).")
-elif u_bmi >= 18.5:
+elif u_bmi >= 18.5: #과체중 (비만 전 단계)
     print(f"BMI: {u_bmi:.1f} - Normal weight.")
-else:
+else: #정상 체중
     print(f"[Caution] BMI: {u_bmi:.1f} - Underweight. Nutritional management may be needed.")
+    #저체중. 영양 관리가 사용자에게 도움이 될 듯
+
 #blood pressure 
 if u_sbp >= 160 or u_dbp >= 100:
     print("[Danger] Stage 2 Hypertension (High risk).")
-elif u_sbp >= 140 or u_dbp >= 90: #고혈압2
+elif u_sbp >= 140 or u_dbp >= 90: #고혈압2 매우 위험
     print("[Warning] Stage 1 Hypertension. Blood pressure management is required.")
-elif u_sbp >= 130 or u_dbp >= 80: #고혈압1
+elif u_sbp >= 130 or u_dbp >= 80: #고혈압1 혈압 관리가 요구됨
     print("[Caution] Elevated Blood Pressure (Prehypertension).")
-elif u_sbp < 120 and u_dbp < 80: #전고혈압
+elif u_sbp < 120 and u_dbp < 80: #전고혈압 주의 혈압
     print("Optimal normal blood pressure.")
 else: #최적 혈압
     print("[Notice] Blood pressure is within the caution range.")
+        #혈압이 주의 범위 안에 있음
+
 #glucose 
 if u_glu >= 126:
-    print("[Danger] Suspected Diabetes. Fasting glucose is critically high.")
-elif u_glu >= 100: #당뇨의심
-    print("[Caution] Impaired Fasting Glucose (Pre-diabetes). Monitor your sugar intake.")
-else: #정상 공복 혈당| 
-    print("Normal fasting blood glucose.")
+    print("[Danger] Suspected Diabetes. glucose is critically high.")
+elif u_glu >= 100: #당뇨 의심, 글루코스가 매우 치명적
+    print("[Caution] Impaired Glucose (Pre-diabetes). Control your sugar intake.")
+else: #손상된 글루코스(전 당뇨),사용자는 당분 섭취를 조절
+    print("Normal blood glucose.")
+    #정상 공복 혈당
+#HbA(당화혈색소)
+if u_hba >= 6.5:
+    print("[Danger] Diabetes diagnosis range. Medical treatment is highly advised.")
+elif u_hba >= 5.7:#당뇨 진단 범위, 의학적 치료를 강하게 조언
+    print("[Caution] Pre-diabetes range. Change your lifestyle.")
+else:#전 당뇨 단계, 라이프 스타일 바꾸기
+    print("Normal HbA1c level.")
+    #평범한 당화혈색소 단계
+# DM(diabetes mellitus:당뇨병)
+if u_dm == 1:
+    print("📋 [Record] Prior history of diabetes noted. This will strongly affect the prediction.")
+else:#이전 당뇨 진료에 기록됨. 이것은 예측에 강하게 영향이 감
+    print("📋 [Record] No prior history of diabetes.")
+    #당뇨에 관한 이전 진료 기록이 없음
+
+#13개의 변수 맞추기 | 위와 똑같이 info,body,blood로 나눠주기
+u_ageg = u_age//10 #AgeGroup /:flaot //:int
+UserInfo = {
+    'Gender':[u_gen],
+    'Age':[u_age],
+    'AgeGroup':[u_ageg],
+    'Town':[u_town],
+    'Education':[u_edu]
+}
+UserBody = {
+    'HT':[u_ht],
+    'WC':[u_wc], #ui 파트에서 변수를 굳이 맞출 필요는 없다. 사용자 정보를 받을 딕셔너리는 개수가 정확해야 함.
+    'BMI':[u_bmi]
+}
+UserBlood = {
+    'SBP':[u_sbp],
+    'DBP':[u_dbp],
+    'GLU':[u_glu],
+    'HbA':[u_hba],
+    'DM':[u_dm]
+}
+#피날레(각 파트 예측 확률 출력 및 합쳐서 최종 출력) f:finsh| [:,1]: 양성일 확률만 출력
+UserInfof = doctor_info.predict_proba(UserInfo)[:,1]
+UserBodyf = doctor_by.predict_proba(UserBody)[:,1]
+UserBloodf = doctor_bd.predict_proba(UserBlood)[:,1]
+
+UserTotal = (UserInfof + UserBodyf + UserBloodf / 3)
+UserProb = UserTotal[0] #[0]사용자 정보
+
+print('-'*50)
+print('Medical AI analysis complete!')
+print('-'*50)
+#확률 [:,1]로 계산되었기에 모든 확률은 양성 확률 가능성에 기준임
+if UserProb >= 0.5:
+    print(f"[Result] Dyslipidemia Risk Detected! (Predicted: 1)")
+    #결과: 고지혈증(Dyslipidmia) 발견 (양성)
+    print(f"Your calculated risk probability is {UserProb * 100:.1f}%.")
+    #사용자의 양성 위험 가능성은 UserProb %로 계산됨
+    print("Medical AI highly recommend consulting with a healthcare professional for a detailed check up and lifestyle management.")
+    # 의료 ai는 정밀 검진과 라이프 스타일 관리를 위해 헬스케어 전문가와 함께 상담을 받아보는 것을 강력히 추천
+else:
+    print(f"[Result] Normal / Low Risk (Predicted: 0)")
+    #결과: 정상, 낮은 위험 (음성)
+    print(f"Your calculated risk probability is {UserProb * 100:.1f}%.")
+    #사용자의 양성 위험 가능성은 UserProb %로 계산됨
+    print("Keep up the good work. Maintain your current healthy diet and exercise routine.")
+    #계속 좋은 상태 유지. 사용자는 건강 다이어트와 운동 루틴을 계속 유지 ㄱㄱ
 # %%
-#26.4.21
+#end
