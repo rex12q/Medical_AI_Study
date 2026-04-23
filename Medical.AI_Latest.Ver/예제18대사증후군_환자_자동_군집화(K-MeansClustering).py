@@ -1,5 +1,5 @@
-#본 EMR은 한림대학교 '확률과 통계' 수업 시간 때 제공받은 병원 데이터를 가져온 것이므로 무단으로 유포하지 않을 것을 선서합니다.
-#사용자는 EMR을 함부로 유포하면 국내 의료법에 의거하여 법적 처벌을 받을 수 있다는 것을 인지합니다.
+#본 EMR데이터는 XX대학교  극히 일부분 '틀'(내용X)을 가지고 진행했음을 알립니다
+# 절대 실제 환자의 기록을 토대로 학습을 하지 않았으며 이를 가지고 유포하거나 타인에게 공유할 시, 국내 의료법에 위반된다는 걸 인지하고 있습니다.
 #%%
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -14,7 +14,7 @@ from sklearn.pipeline import make_pipeline #결측치,클러스터 한 과정에
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 
-sav_load = 'Spss_sav/BP_Stat_Final_ExerData.sav'
+sav_load = 'training.sav'
 sa_cs = 'csv/[csv]Metabolic_syndrome_Data.csv' 
 #Metabolic_syndrome_Data.csv -> csv/[csv]이하동일 (실행할 때 마다 파일 덮어씌워짐)
 
