@@ -40,6 +40,7 @@ print('Complete load csv file!') #성공!
 #cluster and pipeline
 X_info = csv_load[['BMI','WC','SBP','DBP','GLU']]
 doctor_clu = make_pipeline(
+    SimpleImputer(),
     StandardScaler(),
     KMeans(n_clusters=3,random_state=42) #군집화 갯수 4로, 섞는 방법 42로 고정
 )
