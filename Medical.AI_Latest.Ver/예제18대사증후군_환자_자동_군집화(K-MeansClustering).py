@@ -42,7 +42,7 @@ X_info = csv_load[['BMI','WC','SBP','DBP','GLU']]
 doctor_clu = make_pipeline(
     SimpleImputer(strategy='median'),
     StandardScaler(),
-    KMeans(n_clusters=3,random_state=42) #군집화 갯수 4로, 섞는 방법 42로 고정
+    KMeans(n_clusters=4,random_state=42) #군집화 갯수 3로, 섞는 방법 42로 고정
 )
 #Cluster_col 생성
 csv_load['Cluster_col'] = doctor_clu.fit_predict(X_info)
@@ -55,7 +55,9 @@ print('X_info group mean') #각 그룹별(group by) 군집화 평균
 cluster_mean = csv_load.groupby('Cluster_col')[['BMI','WC','SBP','DBP','GLU']].mean() #평균
 #groupby는 기능(메서드)이기에 ()| pd는 불러오는 것이기에 []
 print("Result")
+#pandas에서 iterrows()를 붙이게 되면 한쪽에는 index, 한쪽은 rowdata를 가져오기에 그걸 받아줄 cluster_num,row가 있어야 함
 for cluster_num,row in cluster_mean.iterrows(): #iter(반복)rows: 표 위에서부터 한 줄씩(row) 읽어 내려오는 명령어
+#n_clusters에 영향을 받는 구간 (사용자가 군집화를 3개로 하면 3개만, 4개로 하면 4개)
     result_clu = f"[{cluster_num}. group mean] Body Mess Index: {row['BMI']:.1f}| Waist Circumstance: {row['WC']:.1f}| Systololic Blood Pressure: {row['SBP']:.1f}| Diatolic Blood Pressure: {row['DBP']:.1f}| Glucose: {row['GLU']:.1f}"
     #row[]열(칸)이 있는 곳에 행(row)의 내용을 가져오기(row,col 혼란x)| 5개의 그룹을 한 row로
     print(result_clu) #각 그룹 번호는 의미 없음, 그냥 무작위로 던져주는 번호(이를 방지하기 위해 random_state로 고정)
@@ -77,10 +79,25 @@ for cluster_num,row in cluster_mean.iterrows():
     print(f'SBP: {row['SBP']:.1f} | DBP: {row['DBP']:.1f} (Hypertension: 140|90)')
     print(f'GLU: {row['GLU']:.1f} (Prediabetes > 100)')
 #그래프 길이 설정
+cluster_color = {
+    0:'green',
+    1:'pink',
+    2:'orange',
+    3:'red'
+}
+#'Cluster_col' 이름표 달아주기
+cluster_name = {
+    0:'Normal',
+    1:'Danger(1)',
+    2:'Caution',
+    3:'Danger(2)'
+}
+csv_load['Cluster_name']=csv_load['Cluster_col'].map(cluster_name) #map(): 이름 씌워주기, 새로운 열을 하나 만들기
 plt.figure(figsize=(8,6))
-sns.scatterplot(x='BMI',y='GLU',hue='Cluster_col', data=csv_load)
+sns.scatterplot(x='BMI',y='GLU',hue='Cluster_name', data=csv_load)
 #hue:(data 있다는 전제 하에)해당 열에 있는 정보들을 알아서 맞춰주고 안내표까지 그려주는 기능
 #data=''가 이미 있기에 환경이 data로 바뀜
+#hue에서 Cluster_col에 전신이나 마찬가지인 Cluster_name으로 바꾸기
 plt.title('BMI vs GLU')
 plt.show()
 print('END')
