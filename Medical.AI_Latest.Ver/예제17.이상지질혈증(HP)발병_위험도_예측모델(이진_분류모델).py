@@ -111,7 +111,8 @@ Y_train,Y_test
 
 #모델 및 학습
 doctor_info = make_pipeline(
-    SimpleImputer(strategy='median'),
+    SimpleImputer(strategy='most_frequent'),
+    #최빈값: 카테고리형 데이터에 결측치가 있을 때 쓴다. 이런 데이터는 값이 있는 데이터가 아닌 분류를 위한 구분 자료이기에 데이터에서 값이 많은 쪽으로 결측치를 채우는 방식
     StandardScaler(),
     RandomForestClassifier()
 )
