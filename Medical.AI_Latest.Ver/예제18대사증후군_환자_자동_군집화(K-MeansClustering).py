@@ -69,7 +69,7 @@ for cluster_num,row in cluster_mean.iterrows():
     if row['BMI'] >= 30.0 or row['GLU'] >= 150:
         groupName = 'Extreme High Risk Group'
     elif 23.0 <= row['BMI'] < 30.0 or 100 <= row['GLU'] < 150:
-        groupName = 'Mediumn Risk Group'
+        groupName = 'Medium Risk Group'
     else:
         groupName = 'Normal Group'
     print('-'*50)
