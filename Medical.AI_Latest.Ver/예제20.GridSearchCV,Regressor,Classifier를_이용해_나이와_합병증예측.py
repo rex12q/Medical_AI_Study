@@ -5,6 +5,7 @@ import pandas as pd
 import os
 import pyreadstat 
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier,RandomForestRegressor
@@ -30,7 +31,8 @@ except Exception as e:
 csv_load=pd.read_csv(csv_file)
 
 #사용자가 모은 정보만 학습하기 위해 따로 변수 만들기(drop하기엔 카테고리가 너무 많음)
-csv_edit=csv_load[['Gender','Age','WC','SBP','DBP','BMI','GLU','HbA']]
+csv_edit=csv_load[['Gender','Age','WC','SBP','DBP','BMI','GLU','HbA']].copy()
+#.copy():원본 데이터를 건드는 것에 예민한 파이썬이 경고를 낼 수 있기에, .copy()라는 복사본 인증 마크를 달아주면 된다
 
 #성별에 따른 조건 부여(WC는 남,여 기준이 다름)
 condition = [
@@ -157,7 +159,7 @@ while True:
             except ValueError:
                 print('Oops! That type is wrong, try again')
     UserInfoGet = {
-        'Gender':[UserInfo('What is your gender? (1:Male,2:Female)',0,1,is_float=False)],
+        'Gender':[UserInfo('What is your gender? (1:Male,2:Female)',1,2,is_float=False)],
         'Age':[UserInfo('How old are you? (Range:0~150)',0,150,is_float=True)],
         'WC':[UserInfo('Enter your Waist Circumference',40,150)],
         'SBP':[UserInfo('Enter your Systolic Blood Pressure',40,250)],
@@ -188,6 +190,25 @@ while True:
     elif pred_user == 0:
         print(f'Result: Negative Probability{(1-proba_user)*100:.1f}')
         print('Good Condition! Keep your healthy body!')
+    #subplot:(큰 도화지를 반으로 나눠서<-사용자가 별도로 설정) 한 번에 띄우는 기능
+    fig, axes = plt.subplots(1,2,figsize=(14,6)) #fig: 전체 액자 프레임,figsize:액자크기(가로 세로),(1줄 2칸)
+    #axes:그림을 그리는 공간(axes[0],axes[1]로 나눠서 counplot,scatterplot으로 나눠야 함)
+    #전체 환자 양성,음성 표
+    sns.countplot(x='positive_result',data=csv_edit,ax=axes[0]) #axes[0]:왼쪽에다가 그리기
+    axes[0].set_title('Postive|Negative Patients Result') #set을 써서 어떤 방(axes[0],[1])에 들어갈 지를 지정해주는 코드
+    axes[0].set_xticks([0,1],['Negative(0)','Positive(1)']) #0과 1에 이름 붙여주기
+    #전체 환자 중 사용자를 띄운 표
+    sns.scatterplot(x='Age',y='GLU',marker='o',color='gray',data=csv_edit,label='Other Patients',alpha=0.5,ax=axes[1]) #다른 환자들
+    #alpha:점의 투명도를 0(완전 투명)에서 1(불투명)사이로 조절->겹쳐있는 점을 세세하게 보기
+    u_age=user_dt['Age'][0] #사용자 나이 가져오기
+    u_glu=user_dt['GLU'][0] #사용자 글루코스 가져오기
+    #모든 환자의 데이터를 불러올 것은 아니기에 plt.scatter로 사용자의 정보 하나만 가져오기
+    axes[1].scatter(x=u_age,y=u_glu,marker='*',color='red',label='User',zorder=5)#행동 명령일 때는 set_을 쓰지 않는다(legned,show..)
+    #zorder: 특정 정보를 맨 앞으로 가져오거나 맨 뒤로 보내는 기능
+    axes[1].set_title('User Status')
+    axes[1].legend() #안내표
+    plt.tight_layout() #그림이 겹치지 않게 간격을 조절해주는 도구
+    plt.show()
     while True:
         YesNo=input('Can you restart this test? (press y|n)')
         if YesNo == 'y':
