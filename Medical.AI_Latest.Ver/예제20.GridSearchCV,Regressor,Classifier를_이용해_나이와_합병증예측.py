@@ -35,17 +35,20 @@ csv_edit=csv_load[['Gender','Age','WC','SBP','DBP','BMI','GLU','HbA']]
 #성별에 따른 조건 부여(WC는 남,여 기준이 다름)
 condition = [
     #Male
-    (csv_edit['Gender']==1)&(csv_edit['WC']>=90.0)& #남자는 90
-    (csv_edit['HbA']>=6.5)&(csv_edit['GLU']>=126.0)& # 당뇨 확진 수준
-    (csv_edit['BMI']>=30.0)& #WC와 함께 복부비만
-    (csv_edit['SBP']>=140.0)&(csv_edit['DBP']>=90.0),
+    (csv_edit['Gender']==1)&(csv_edit['WC']>=90.0), #남자는 90
     #Female
-    (csv_edit['Gender']==0)&(csv_edit['WC']>=85.0)& #여자는 85
-    (csv_edit['HbA']>=6.5)&(csv_edit['GLU']>=126.0)& # 당뇨 확진 수준
-    (csv_edit['BMI']>=30.0)& #WC와 함께 복부비만
-    (csv_edit['SBP']>=140.0)&(csv_edit['DBP']>=90.0)
+    (csv_edit['Gender']==2)&(csv_edit['WC']>=85.0) #여자는 85
 ]
-csv_edit['positive_result']=np.select(condition,[1,1],default=0) #list를 가져와 조건을 전부 만족할 시 둘 다 1부여,그게 아니면 기본값인 0부여
+wc_condition=np.select(condition,[1,1],default=0) #list를 가져와 조건을 전부 만족할 시 둘 다 1부여,그게 아니면 기본값인 0부여
+risk_condition = (
+    (csv_edit['HbA']>=6.5).astype(int)+ # astype으로 정수로 바꿔준 후 조건 부여
+    (csv_edit['GLU']>=126.0).astype(int)+ # 당뇨 확진 수준
+    (csv_edit['BMI']>=30.0).astype(int)+ #WC와 함께 복부비만
+    (csv_edit['SBP']>=140.0).astype(int)+
+    (csv_edit['DBP']>=90.0).astype(int)
+)
+total_risk = wc_condition+risk_condition
+csv_edit['positive_result']=(total_risk >= 3).astype(int) #양성인 값 정수로 변환
 # #사용자가 모은 정보만 학습하기 위해 따로 변수 만들기(drop하기엔 카테고리가 너무 많음)
 # csv_edit=csv_load[['Age','WC','SBP','DBP','BMI','GLU','HbA']]
 #train_test
@@ -67,7 +70,16 @@ doctor_reg=Pipeline([
     ('simp',SimpleImputer(strategy='median')),
     ('stad',StandardScaler()),
     ('reg',RandomForestRegressor(random_state=42))
-]) 
+])
+re_patient=csv_edit['positive_result'].value_counts()
+for pat_name,patients in re_patient.items():
+    if pat_name == 0:
+        print(f'Negative patients: {patients}')
+    elif pat_name == 1:
+        print(f'Postive patients: {patients}')
+# print(f'CSV patients result: {csv_edit['positive_result'].value_counts().to_string()}')
+# value_counts(): 각 카테고리 별 몇 개인 지 확인할 수 있음
+# to_string(): 판다스의 복잡한 기능을 아예 덜어주고 내용을 문자형으로 변환해 결과만 내주는 내장어
 print('Auto factory started...')
 #GridSearchCV, dictionary형태 유지
 #RandomForestClassifier
@@ -130,4 +142,63 @@ print(f'Best REG Model: {best_regmodel}')
 print(f"Regressor Model's 'Age' Mean Squared Error: {rmse:.2f} (If Value is low, This model is above average)")
 print('-'*50)
 print('All model loaded!')
+print('-'*50)
+#User
+while True:
+    print('Test User')
+    def UserInfo(prompt,minval,maxval,is_float=True):
+        while True:
+            try:
+                uvalue = float(input(prompt)) if is_float else int(input(prompt))
+                if minval <= uvalue <= maxval:
+                    print('entered')
+                    return uvalue
+                print('Over Range!')
+            except ValueError:
+                print('Oops! That type is wrong, try again')
+    UserInfoGet = {
+        'Gender':[UserInfo('What is your gender? (1:Male,2:Female)',0,1,is_float=False)],
+        'Age':[UserInfo('How old are you? (Range:0~150)',0,150,is_float=True)],
+        'WC':[UserInfo('Enter your Waist Circumference',40,150)],
+        'SBP':[UserInfo('Enter your Systolic Blood Pressure',40,250)],
+        'DBP':[UserInfo('Enter your Diastolic Blood Pressure',40,180)],
+        'BMI':[UserInfo('Enter your Body Mass Index',10,70)],
+        'GLU':[UserInfo('Enter your Glucose',50,170)],
+        'HbA':[UserInfo('Enter your HbA(Hemoglobin A)',2,15)]
+    }
+    #Classifier
+    user_dt=pd.DataFrame(UserInfoGet)
+    rf_columns = ['Age', 'WC', 'HbA', 'GLU', 'BMI', 'SBP', 'DBP'] #강제로 학습 순서와 맞추기
+    # del_gen=user_dt.drop(columns=['Gender']) #학습 카테고리에서 성별은 제외함
+    del_gen=user_dt[rf_columns] #DF가 리스트 형태에서 똑같은 이름을 보고 매치
+    pred_user=main_rfgrid.predict(del_gen)[0]
+    proba_user=main_rfgrid.predict_proba(del_gen)[0][1]
+    #Regressor
+    reg_columns = ['WC', 'HbA', 'GLU', 'BMI', 'SBP', 'DBP']
+    # del_age=user_dt.drop(columns=['Gender','Age']) #마찬가지로 성별 제외하고 나이도 같이 제외
+    del_age=user_dt[reg_columns]
+    pred_age=main_reggrid.predict(del_age)[0]
+    #result
+    print('-'*50)
+    print('Successfully Diagnosis!')
+    print(f"AI predicted User's age: {pred_age:.0f} old")
+    if pred_user == 1:
+        print(f'Result: Positive Probability{proba_user*100:.1f}')
+        print('Care your Body and GO to hospital, AI recommend consulting with doctor')
+    elif pred_user == 0:
+        print(f'Result: Negative Probability{(1-proba_user)*100:.1f}')
+        print('Good Condition! Keep your healthy body!')
+    while True:
+        YesNo=input('Can you restart this test? (press y|n)')
+        if YesNo == 'y':
+            break
+        elif YesNo == 'n':
+            break
+        else:
+            print('You can only enter two spell(y|n)')
+    if YesNo == 'y':
+        print('Countinue test')
+    elif YesNo == 'n':
+        print('End test')
+        break
 # %%
