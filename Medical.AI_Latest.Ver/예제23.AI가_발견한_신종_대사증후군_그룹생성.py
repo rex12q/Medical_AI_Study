@@ -16,7 +16,7 @@ from sklearn.cluster import KMeans
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split,GridSearchCV
 #sav,csv 
-sav_file='Spss_sav/BP_Stat_Final_ExerData.sav'
+sav_file='training.sav'
 csv_file='csv/[csv]예제23.csv'
 #convert
 try:
