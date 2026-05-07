@@ -102,8 +102,10 @@ print('-'*50)
 print('Auto factory started...')
 #train_test
 X_vote=csv_edit[['Gender','HT','WT','BMI','WC']]#피 뽑기 전 스탯
+#이 모델은 X와 Y의 상관관계가 매우 작아 정확도가 낮을 수도 있다. 하지만 피 뽑기 전 스탯을 이용해 어떤 그룹에 속할 지 예측을 한다는 점에서 의의가 있다.
+#일부러 Y_clu의 스탯을 전부 안 겹치도록 설계함
 Y_clu=csv_edit['Cluster_re']#(군집화 그룹을 Y)
-X_reg=csv_edit[['Gender','HT','WT','BMI','WC','SBP','DBP','GLU','HbA']]#나이예측
+X_reg=csv_edit[['Gender','HT','WT','BMI','WC','SBP','DBP','GLU','HbA']]#나이예측(위와는 별개이므로 모든 스탯 총동원)
 Y_reg=csv_edit['Age']#(drop하는 과정 생략)
 X_train_vote,X_test_vote,Y_train_clu,Y_test_clu=train_test_split(X_vote,Y_clu,test_size=0.2,random_state=42)
 X_train_reg,X_test_reg,Y_train_reg,Y_test_reg=train_test_split(X_reg,Y_reg,test_size=0.2,random_state=42)
@@ -180,6 +182,7 @@ print('Total Performance')
 #vote
 best_vote_model=optimal_vote_grid.best_estimator_
 best_vote_score=optimal_vote_grid.best_score_
+test_score=best_vote_model.score(X_test_vote,Y_test_clu) #실력 테스트
 #reg
 best_reg_model=optimal_reg_grid.best_estimator_
 best_reg_score=optimal_reg_grid.best_score_
@@ -187,7 +190,8 @@ real_mse=best_reg_score * -1 #MSE특징인 음수 출력을 방지하기 위한 
 sqrt_mse=np.sqrt(real_mse) #제곱한 값을 루트로 다시 벗겨주기
 print('-Best voting model and score-')
 print(f'Model: {best_vote_model}')
-print(f'Score: {best_vote_score*100:.2f}')
+print(f'Train (Cross Validate) test: {best_vote_score*100:.2f}')
+print(f'Final Score: {test_score*100:.2f}')
 print('-Best voting model and score-')
 print(f'Model: {best_reg_model}')
 print(f'Score: {sqrt_mse:.2f}')
@@ -260,7 +264,7 @@ while True:
     u_bmi=[u_bmi_val] #list로 감싸주기
     u_wc=[userRange('Enter your waist circumference (Range:0~300): ',0,300)]
     while True:
-        userKnow=input("AI has already replace question, So if don't you know your body information, You can replace your body info. Do you want to replace your info?(y|n)")
+        userKnow=input("AI has already replace question, So if you don't know your body information, You can replace your body info. Do you want to replace your info?(y|n)")
         if userKnow == 'n':
             print('You can enter your body info!')
             u_sbp=[userRange('Enter your systolic blood pressure(Range:30~300): ',30,300)]
@@ -314,6 +318,7 @@ while True:
     axes[1].scatter(x=scatter_age,y=scatter_glu,color='green',marker='*',label='User',zorder=5) #사용자 정보는 상단에 띄우기(zorder)
     axes[1].set_title('User and Patients Status (Metabolic Syndrome)')
     axes[1].legend()
+    axes[1].axhline(126.0,color='blue',linestyle='--')#수평선
     plt.tight_layout()
     plt.show()
     while True:
