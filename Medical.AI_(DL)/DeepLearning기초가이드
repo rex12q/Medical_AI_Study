@@ -1,0 +1,6 @@
+ML과 다르게 DL에다가도 가상환경(venv)를 하나 따로 만들기
+1.python3 -m venv .venvDL
+2.(.venvDL)생성 완료
+3.앞서 썼던 .venv와 마찬가지로 deactivate를 이용해서 방을 빠져나와 새 환경에서 작업을 할 수 있음
+.venvDL 방 입장
+1.source .venvDL/bin/activate| (.venvDL) (base) ye@MacBook-Air-2 Medical.AI_none.ver(edit) %  <- 이런 식으로 나타남
