@@ -9,6 +9,7 @@ brain_model=nn.Linear(in_features=1,out_features=1)#단순한 데이터, linear(
 #정답 체크 (안전 장치)
 criterion=nn.MSELoss()#MSE: 오차에 제곱을 해서 평균을 내는 방식(제곱을 하기에 오차가 클수록 모델의 전체적인 성능 저하)
 optimizer=optim.SGD(brain_model.parameters(), lr=0.01) #SGD 아래서 참고,lr(learning rate):학습률,보폭을 설정해 0에 수렴할 수 있도록 도와줌
+#parameters(매개변수)는 모델 내부의 가중치(W)와 편향(b)를 의미한다.->출력값이 완전 다르게 나왔을 경우 W와 b를 건드려 조정
 #Training loop(예측->오차출력->역전파(편미분 과정)->업데이트)
 for d in range(100):
     optimizer.zero_grad #zero_grad:pytorch는 이전에 학습했던 정보가 있기에 진짜 성능을 테스트 하기 전 한 번 지워주는 기능(리셋)
