@@ -23,4 +23,4 @@ plt.title('ReLU filter')
 plt.subplot(1,2,2) 
 plt.plot(patients_data.numpy(),clean_probability.numpy())#(X:환자 정보,Y:필터)
 plt.title('Sigmoid filter')
-plt.show()
+plt.show() #
