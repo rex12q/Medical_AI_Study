@@ -2,10 +2,10 @@ import torch #텐서 엔진
 import torch.nn as nn #Neural Network(nn): 신경망의 뼈대,자세한 내용은 아래 참고
 import torch.optim as optim #optim: 최적화 성능 제공
 #데이터(->텐서)
-X=torch.tensor([[1.0],[2.0],[4.0]]) #공부 시간 
-Y=torch.tensor([[[50.0],[68.0],[89.0]]]) # 성적
-#인공신경망 생성 (입력:1개, 출력:1게),(결괴를 늘린다고 무조건 모델의 성능이 올라가는 것은 아니다. 연관이 있어야 UP!!)
-brain_model=nn.Linear(in_features=1,out_features=1)#단순한 데이터, linear(선형)을 이용해 y=Wx+b (W=Weight) 1차 방정식
+X=torch.tensor([[1.0],[2.0],[3.0]]) #공부 시간 
+Y=torch.tensor([[30.0,42.0],[58.3,62.0],[72.4,89.0]]) # 성적
+#인공신경망 생성 (입력:1개, 출력:2게),(결괴를 늘린다고 무조건 모델의 성능이 올라가는 것은 아니다. 연관이 있어야 UP!!)
+brain_model=nn.Linear(in_features=1,out_features=2)#단순한 데이터, linear(선형)을 이용해 y=Wx+b (W=Weight) 1차 방정식
 #정답 체크 (안전 장치)
 criterion=nn.MSELoss()#MSE: 오차에 제곱을 해서 평균을 내는 방식(제곱을 하기에 오차가 클수록 모델의 전체적인 성능 저하)
 optimizer=optim.SGD(brain_model.parameters(), lr=0.01) #SGD 아래서 참고,lr(learning rate):학습률,보폭을 설정해 0에 수렴할 수 있도록 도와줌
@@ -18,9 +18,13 @@ for d in range(100):
     loss.backward() #backward(역전파):방금 푼 loss에서 오차(오답)가 어디서 발생했는지 수학적(편미분)으로 접근,(오차(출력)-(편미분)>은닉-(편미분)>입력)역방향
     optimizer.step() #step:편미분값에 학습률(lr)을 곱하여 가중치 값을 수정->0에 수렴할 수 있도록 미세조정
 #결과
-print(f'1시간 공부했을 때 AI의 점수 예측: {brain_model(torch.tensor([[1.0]])).item():.2f}') #tensor로 감싸주기
-print(f'2시간 공부했을 때 AI의 점수 예측: {brain_model(torch.tensor([[2.0]])).item():.2f}')
-print(f'4시간 공부했을 때 AI의 점수 예측: {brain_model(torch.tensor([[4.0]])).item():.2f}')
+#tolist:기능을 제외하고 순수 리스트만 남겨두게 하는 기능|[0]은 순수 리스트만 남은 사용자의 정보를 가져올 수 있는 idx
+divide_1=brain_model(torch.tensor([[1.0]])).tolist()[0]
+divide_2=brain_model(torch.tensor([[2.0]])).tolist()[0]
+divide_3=brain_model(torch.tensor([[3.0]])).tolist()[0]
+print(f'1시간 공부했을 때 AI의 점수 예측: {divide_1[0]:.2f},{divide_1[1]:.2f}') #divide로 감싸주기 
+print(f'2시간 공부했을 때 AI의 점수 예측: {divide_2[0]:.2f},{divide_2[1]:.2f}') #[0][1] 정보 2개
+print(f'3시간 공부했을 때 AI의 점수 예측: {divide_3[0]:.2f},{divide_3[1]:.2f}')
 
 #linear Regression(선형 회귀): 데이터 흐름의 직선(y=ax+b)을 찾고, 과거의 데이터를 바탕으로 미래의 수치값을 예측할 때 사용
 #Neural Network(nn): 신경망의 뼈대 (층layer, 손실함수 loss function, 활성화 함수 activation function)..등 모든 모듈이 nn안에 정의됨
