@@ -28,7 +28,7 @@ class PredictorAI(nn.Module):#nn.Module:사용자 만의 인공지능 신경망�
         x=self.relu_med(x)
         #output
         x=self.doctor_hard(x)
-        # x=self.relu_hard(x) 
+        # x=self.relu_hard(x) 확률 값에서 '-'값이 나올시 ReLU특성으로 0이하 값을 출력 안 함
         #final probability
         x_sigmoid=self.sigmoid(x)
         return x_sigmoid #최종 확률값 리턴
