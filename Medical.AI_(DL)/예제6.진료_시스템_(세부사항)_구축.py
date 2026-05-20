@@ -54,7 +54,7 @@ for epochs in range(1000):
     prediction=doctor(x_info)
     loss=bce(prediction,y_info)
     #zero_grad(전이랑 다른 위치 조정):예제2에서는 앞전에 썼지만, 이번 예제는 문제를 먼저 풀고 채점을 한 다음에 초기화
-    optimizer.zero_grad
+    optimizer.zero_grad()
     loss.backward()#역추적(편미분)
     optimizer.step()#역추적 성공 후 업데이트
 #result
