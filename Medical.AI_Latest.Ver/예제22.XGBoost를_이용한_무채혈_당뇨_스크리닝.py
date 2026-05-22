@@ -42,7 +42,7 @@ print('-'*50)
 #csv_load
 csv_load = pd.read_csv(csv_file)
 #Hidden_Diabetes
-#np.where:(조건,참일 때,거짓일 때),조건이 하나만 있을 때,elect처럼 조건의 갯수를 따지면 리스트를 안 써도 됨
+#np.where:(조건,참일 때,거짓일 때),조건이 하나만 있을 때,select처럼 조건의 갯수를 따지면 리스트를 안 써도 됨
 csv_load['Hidden_Diabetes']=np.where(csv_load['HbA']>=6.5,1,0)
 #data
 X_gb=csv_load[['Gender','Age','HT','WT','BMI','WC','SBP','DBP']]
