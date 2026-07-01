@@ -10,8 +10,7 @@ from tensorflow.keras.layers import Dense,Dropout
 #ModelCheckpoint: 모델 학습 중 가장 성능이 좋았던 순간의 모델을 파일로 자동 저장
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split,GridSearchCV
-from sklearn
+from sklearn.model_selection import train_test_split
 #순서: [나이, BMI, 혈압, 혈당]
 raw_X = [
     [21, 23.0, 80,  85],  # 아주 건강한 사람
@@ -79,18 +78,18 @@ class EarlyStopping:
         self.early_stop=False #조기 종료 스위치
         self.path=path #모델 저장 경로(ModelCheckPoint)
 
-    def __call__(self, val_loss, model):
+    def __call__(self, val_loss, model): #__call__을 이용하여 섹션 나누기
         # 첫 번째 에포크일 때
-        if self.best_score is None:
-            self.best_score = val_loss
+        if self.best_score is None: 
+            self.best_score = val_loss #최고 점수=검증 손실
             self.save_checkpoint(val_loss, model) 
         #신기록 달성 못했을 때
         elif val_loss >= self.best_score:
-            self.counter += 1
+            self.counter += 1 #1회씩 누적을 해야 patience 설정값에 만족할 수 있음->강제 종료
             if self.verbose:
                 print(f'[EarlyStopping] 참을성: {self.counter} / {self.patience}')
-            if self.counter >= self.patience: #카운터가 인내심 횟수보다 많을 경우
-                self.early_stop=True
+            if self.counter >= self.patience: #카운터가 인내심 횟수보다 많을 경우 얼리스탑 적용
+                self.early_stop=True #
         #신기록 달성 시
         else:
             self.best_score=val_loss
@@ -114,15 +113,18 @@ for epoch in range(epochs): #for 이름 epoch로 설정
     loss.backward() #역추적(편미분,어디서 오답이 발생했나)
     optimizer.step() #최신화
 
-    #모델(의사) 평가 테스트 (복잡한 그래프 그리기 제외)
+    #모델(의사) 평가 테스트 (실전용 모드)
     doctor.eval()
-    with torch.no_grad():
+    with torch.no_grad(): #메모리 낭비 방지(복잡한 그래프 그리기 방지)
         pred=doctor(X_t_info) #실제 테스트
         loss_t=bce(pred,y_t_info) 
     early_stopping(loss_t.item(),doctor)
 
+# 진행 상황을 터미널에 출력
+    if (epoch + 1) % 10 == 0: #0이아닌 1부터 시작, 10으로 나눠서 나머지가 0일 경우 출력
+        print(f"Epoch [{epoch+1}/{epochs}] Train Loss: {loss.item():.4f} | Val Loss: {loss_t.item():.4f}")
+
+    #조기 종료 및 모델 저장
     if early_stopping.early_stop:
         print('Early stop 발생!')
         break
-
-#진행중(26.6.30)
