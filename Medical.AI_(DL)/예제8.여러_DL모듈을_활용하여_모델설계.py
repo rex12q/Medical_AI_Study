@@ -5,10 +5,10 @@ import numpy as np
 from tensorflow.keras.models import Sequential #Layer모델 함수
 #Dense: 모든 노드와 연결되어 있는 연결되어 있는 상태
 #Dropout: 과적합 방지, 특정 노드에 의존할 수 없도록 모든 노드 학습
-from tensorflow.keras.layers import Dense,Dropout 
+# from tensorflow.keras.layers import Dense,Dropout 
 #EarlyStopping: 과적합이 심해질 경우 제지해주는 역할 (Validation Loss이 늘어나면 제지)
 #ModelCheckpoint: 모델 학습 중 가장 성능이 좋았던 순간의 모델을 파일로 자동 저장
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+# from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 #순서: [나이, BMI, 혈압, 혈당]
@@ -27,7 +27,7 @@ class MLPset(nn.Module):
         super().__init__() #상위 부모 클래스 가져오기
         self.input_layer=nn.Linear(4,16) #col 4개에 맞춰서 in_features설정
         self.input_relu=nn.ReLU() #0이하 값 drop
-        self.model=nn.Sequential(
+        self.hidden_layer=nn.Sequential(
             nn.Linear(16,32),
             nn.ReLU(),
             nn.Dropout(0.2),
@@ -40,7 +40,7 @@ class MLPset(nn.Module):
     def forward(self,data_load): #데이터 흐름과 방향(네비게이션 역할)
         x=self.input_layer(data_load)
         x=self.input_relu(x)
-        x=self.model(x)
+        x=self.hidden_layer(x)
         x=self.output_layer(x)
         x=self.sigmoid_x(x)
         return x
@@ -63,7 +63,7 @@ bce=nn.BCELoss() #True면 0 False면 1(MSE는 경사값이 완만해져서)
 # #지표: 검증 손실, 인내심:14 -> 가장 좋은 검증 손실이 나왔을 때, 최고 기록(가장 오답이 적을 때)을 넘지 못 할 경우
 # estop=EarlyStopping(monitor='val_loss',patience=14) 
 #가장 폼이 좋았던 순간을 CHECK!!! (업데이트 후 h5 -> keras) 폼 미쳤던 순간만 저장, verbose=저장할 떄 마다 터미널 알람 설정
-mcheck=ModelCheckpoint(monitor='val_loss',filepath='best_model.keras',save_best_only=True,verbose=1)
+# mcheck=ModelCheckpoint(monitor='val_loss',filepath='best_model.keras',save_best_only=True,verbose=1)
 #optimizer Adam 세부 설정
 optimizer=optim.Adam(doctor.parameters(),lr=0.01) 
 
@@ -79,28 +79,28 @@ class EarlyStopping:
         self.path=path #모델 저장 경로(ModelCheckPoint)
 
     def __call__(self, val_loss, model): #__call__을 이용하여 섹션 나누기
-        # 첫 번째 에포크일 때
+        # 첫 번째 에포크일 때: 비교할 점수가 없기에 현재 점수를 최고 점수로 기록
         if self.best_score is None: 
             self.best_score = val_loss #최고 점수=검증 손실
             self.save_checkpoint(val_loss, model) 
-        #신기록 달성 못했을 때
+        #신기록 달성 못했을 때: 성적이 그대로거나 그 이하
         elif val_loss >= self.best_score:
-            self.counter += 1 #1회씩 누적을 해야 patience 설정값에 만족할 수 있음->강제 종료
+            self.counter += 1 #1회씩 누적을 해야 patience 설정값에 만족할 수 있음->강제 종료 (실망했으니 1점씩 추가)
             if self.verbose:
                 print(f'[EarlyStopping] 참을성: {self.counter} / {self.patience}')
-            if self.counter >= self.patience: #카운터가 인내심 횟수보다 많을 경우 얼리스탑 적용
+            if self.counter >= self.patience: #카운터가 인내심 횟수보다 많거나 같을 경우 얼리스탑 적용
                 self.early_stop=True #
         #신기록 달성 시
         else:
             self.best_score=val_loss
-            self.save_checkpoint(val_loss,model)
-            self.counter = 0
+            self.save_checkpoint(val_loss,model) #가장 폼이 좋았던 val_loss,model을 저장하기
+            self.counter = 0 #신기록 갱신, 그래서 0으로 다시 리셋
     #save_checkpoint 함수
     def save_checkpoint(self,val_loss,model):
         if self.verbose:
             print('[모델 저장됨!] 최고 기록을 저장합니다')
         #state_dict:가중치 값 출력, path 저장
-        torch.save(model.state_dict(),self.path)
+        torch.save(model.state_dict(),self.path) #가장 성능이 좋았던 순간을 저장하여 저장한 내용을 씀
 #EarlyStopping 모듈처럼 쓰기
 early_stopping=EarlyStopping(patience=14,verbose=True)
 #pytorch에는 compile기능이 없기에 모듈을 밖에다가 두고 for문으로 반복 훈련
@@ -114,17 +114,21 @@ for epoch in range(epochs): #for 이름 epoch로 설정
     optimizer.step() #최신화
 
     #모델(의사) 평가 테스트 (실전용 모드)
-    doctor.eval()
-    with torch.no_grad(): #메모리 낭비 방지(복잡한 그래프 그리기 방지)
+    doctor.eval() #.eval() (실전 모드)
+    with torch.no_grad(): #메모리 낭비 방지(복잡한 그래프 그리기 방지,시험에만 몰두)
         pred=doctor(X_t_info) #실제 테스트
         loss_t=bce(pred,y_t_info) 
-    early_stopping(loss_t.item(),doctor)
+    early_stopping(loss_t.item(),doctor) #bce기반 시험을 치른 doctor가 early_stopping에게 제출
 
 # 진행 상황을 터미널에 출력
-    if (epoch + 1) % 10 == 0: #0이아닌 1부터 시작, 10으로 나눠서 나머지가 0일 경우 출력
+    if (epoch + 1) % 10 == 0: #0이아닌 1부터 시작, 10으로 나눠서 나머지가 0일 경우 출력 (출력 시 10 간격으로 출력이 됨)
         print(f"Epoch [{epoch+1}/{epochs}] Train Loss: {loss.item():.4f} | Val Loss: {loss_t.item():.4f}")
 
-    #조기 종료 및 모델 저장
+    #조기 종료 및 모델 저장 
+    #14번을 넘었기에 더 이상의 과적합을 봐주지 않고 바로 조기 퇴근행으로 보냄
     if early_stopping.early_stop:
         print('Early stop 발생!')
         break
+#코드를 작성하고 실행할 시 출력되는 것은 Train Loss: 0.0000 | Val Loss: 0.0000 과 epoch가 10단위로 떨어져서 출력이 된다
+#신경망 구조에 비해 모델이 학습할 학습량이 압도적으로 적기 때문에 극단적인 Overfitting이 일어나는 것을 확인할 수 있다
+#mcheck,earlystopping은 이미 class와 def를 이용하여 만듦 (세부 조정)
