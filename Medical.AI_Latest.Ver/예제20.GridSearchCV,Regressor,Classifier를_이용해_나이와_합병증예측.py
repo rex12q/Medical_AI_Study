@@ -52,7 +52,10 @@ risk_condition = (
 total_risk = wc_condition+risk_condition
 csv_edit['positive_result']=(total_risk >= 3).astype(int) #양성인 값 정수로 변환
 # #사용자가 모은 정보만 학습하기 위해 따로 변수 만들기(drop하기엔 카테고리가 너무 많음)
-# csv_edit=csv_load[['Age','WC','SBP','DBP','BMI','GLU','HbA']]
+
+#추가사항: OnehotEncoding (26.7.13)
+csv_edit=pd.get_dummies(csv_edit,columns=['Gender'],drop_first=True)
+
 #train_test
 X_rf = csv_edit[['Age','WC','HbA','GLU','BMI','SBP','DBP']]
 Y_rf = csv_edit['positive_result']
