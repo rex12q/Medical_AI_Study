@@ -65,9 +65,10 @@ q_detail=(
 )
 q_total=info_gen+q_detail
 csv_load['total_result']=(q_total >= 3).astype(int) #col 생성
-#2. 파이프라인 활용
-X_reg=csv_load[['Gender','Age','GLU','HbA','BMI','SBP','DBP']]
-y_reg=csv_load['total_result']
+#2. 파이프라인 활용 
+#조건과 같은 컬럼을 쓸 시 데이터 유출로 판단 
+X_cla=csv_load[['Gender','Age','GLU','HbA','BMI','SBP','DBP']]
+y_cla=csv_load['total_result']
 #일단 자료 나눠보자
 num_col=['Age','GLU','HbA','BMI','SBP','DBP']
 stad_pp=Pipeline([
@@ -80,16 +81,13 @@ merging_col_m=ColumnTransformer(
     remainder='passthrough' #Age pass
 )
 #3. 학습 및 튜닝
-X_train,X_test,y_train,y_test=train_test_split(X_reg,y_reg,test_size=0.2,random_state=42)
+X_train,X_test,y_train,y_test=train_test_split(X_cla,y_cla,test_size=0.2,random_state=42)
 doctor=Pipeline([
     ('d_stad',StandardScaler()),
     #평가 지표 설정: 로그 손실 (정답과 반대되는 오진을 남겼을 경우 로그의 성질을 이용하여 패널티를 값과 비례하여 부여(무한대로 부여 가능))
     ('xgb',XGBClassifier(random_state=42,eval_metric='logloss'))
 ])
 #검증 데이터는 스케일링을 거치지 않음
-st=StandardScaler()
-X_train=st.fit_transform(X_train) #검증 데이터 때문에 한 번 더 진행 
-X_test=st.transform(X_test) #스케일링 받기)
 param_grid={
     'xgb__n_estimators':[100,300,500,1000],
     'xgb__max_depth':[3,5,7,11,20],
@@ -109,35 +107,85 @@ model_tuning=GridSearchCV(
 model_tuning.fit(X_train,y_train) #optimal doctor
 best_model=model_tuning.best_estimator_ #정보 받은 추정자 인원 중 최적 인원 수 출력
 best_scoring=model_tuning.best_score_ 
-pred_data=best_model.predict(X_test) #여러 번 학습을 받은 모델
-#점수 측정 방법 1
-# scoring=best_model.score(X_test,y_test) #테스트 데이터로 측정
-#점수 측정 방법 2
-scoring=(y_test,pred_data) #테스트 데이터와 예측 데이터로 측정
-final_rmse=np.sqrt(scoring) #제곱근 씌우기
-print('결과 값이 작을 수록 오차 범위가 없는 거기에 좋음')
-print(f'제곱근이 씌워진 평균 제곱 오차 결과: {final_rmse*100:.2f}')
+
+#roc_curve 생성을 위해 predict_proba로 설정 [전체,양성값] (4번 과정으로 이어짐)
+prob_data=best_model.predict_proba(X_test)[:,1] #여러 번 학습을 받은 모델
+pred_data=best_model.predict(X_test)
+
+#점수 측정 방법 (최고의 임계값을 찾기 전)
+acc=accuracy_score(y_test,pred_data) #테스트 데이터와 예측 데이터로 채점
+f1=f1_score(y_test,pred_data)
+c_report=classification_report(y_test,pred_data)
+r_score=roc_auc_score(y_test,prob_data)
+print()
+print('최고의 임계값을 찾기 전, 모델 성능 평가')
+print()
+print(f'모델의 정확성(Accuracy_Score): {acc*100:.2f}점 ')
+print()
+print('분류 리포트')
+print(f'{c_report}')
+print()
+print(f'정확성 뒷받침 근거 채점 자료(f1_score): {f1*100:.2f}% ')
+#양성을 양성으로 판단(정밀도),올바르게 판단한 후, 양성을 몇 명 발견했나(재현율)
+print('정확성 지표에서 자료를 재현율과 정밀도를 이용하여 보다 정확한 지표 출력')
+print()
+print(f'ROC_AUC_SCORE: {r_score*100:.2f}점')
+print('록_스코어는 최적의 임계값을 구하기 전, 모델이 모든 경우의 임계값을 통해 테스트한 전체 결과를 지표임을 알림')
+print()
+
 #4. 시각화 자료 출력
 
-#혼동 행렬은 '분류 지표'에 해당됨. 따라서 astype(int)를 통해 정수화 시켜서 혼동 행렬을 통해 결과 출력
-#혼동 행렬 조건: 이진 데이터 취급(분류 데이터) | scatterplot: 측정 데이터 (회귀 모델과 함께)
-pred_class=(pred_data>0.5).astype(int)
-#array(쓰면 원본, 배열 수정본 생성)를 써서 비교 가능 (asarray는 대용량 데이터일 때만 쓰기)
+#FPR,TPR을 통해 최적의 임계값 찾기| 내부 순서 규칙:(오답,정답,임계값)
+fpr,tpr,thresholds=roc_curve(y_test,prob_data)
+#순이익 계산: tpr(수익)-fpr(비용)=순이익
+optimal_value=np.argmax(tpr-fpr) #np.argmax:가장 큰 값이 존재하는 idx 불러오기
+#최고 임계값은 데이터가 변형될 시 언제든 변동 가능성 유 
+best_value= thresholds[optimal_value] #리스트로 표현
+#직접 확인
+print(f'최고의 임계값 범위: {best_value:.2f}')
 
-#혼동 행렬(y_test,예측 데이터)
-cm=confusion_matrix(y_test,pred_class)
+#정해진 최소 양성 범위 0.5 조건 삭제 -> 최적의 임계값으로 직접 조건 설계(조건 넘으면 1)
+prob_class=(prob_data>best_value).astype(int)
+
+#최고 임계값을 찾은 후 지표 출력
+new_acc=accuracy_score(y_test,prob_class)
+new_report=classification_report(y_test,prob_class)
+new_f1=f1_score(y_test,prob_class)
+print()
+print('최고의 임계값을 찾은 후, 모델 성능 평가')
+print()
+print(f'모델의 정확성(Accuracy_Score): {new_acc*100:.2f}점 ')
+print()
+print('분류 리포트')
+print(f'{new_report}')
+print()
+print(f'정확성 뒷받침 근거 채점 자료(f1_score): {new_f1*100:.2f}% ')
+#양성을 양성으로 판단(정밀도),올바르게 판단한 후, 양성을 몇 명 발견했나(재현율)
+print('정확성 지표에서 자료를 재현율과 정밀도를 이용하여 보다 정확한 지표 출력')
+
+
+#roc_curve(y_데이터,prob_data)
 plt.figure(figsize=(10,6))
-sns.heatmap(cm,annot=True,fmt='d',cmap='Blues') #xtick,ytick 보고 결정 
-plt.title('혼동 행렬을 이용한 heatmap 결과')
-plt.xlabel('인공지능 예측 수치')
-plt.ylabel('사실 정확도')
+#록_커브가 적용된 시각화 자료
+plt.plot(fpr,tpr,color='blue',label='ROC Curve (AI)')
+#예시용(AUC: 0.5 그래프) 대각선 그래프: 록_커브가 적용된 그래프가 예시용 그래프와 비교했을 때 얼마나 튀는가?
+plt.plot([0,1],[0,1],color='red',linestyle='--',label='Example(AUC:0.5)')
+#최적의 임계값 fpr,tpr을 통해 별로 표시
+plt.scatter(fpr[optimal_value],tpr[optimal_value],color='green',marker='*',label=f'최고 임계값: {best_value:.2f}')
+plt.title('록 커브, 최적의 임계값 찾기')
+plt.xlabel('FPR (음성을 양성이라고 오해한 비율(전체 비율 낮으면 좋음))')
+plt.ylabel('TPR (양성을 양성이라고 맞춘 비율(전체 비율 높으면 좋음))')
+plt.legend() #label 모아주기
+plt.grid(True) #바둑판 격자 활성화
 plt.show()
 #출력 구조 2*2: 전체 코드 구조는 이진 분류로 되어있기에 0,1 두개로 나뉨
 
 ############################################################################################################################################
 #ROC AUC 설명
 
-#True,False,Positive,Negative
+#임계값(threshold): 범위 지정 값은 소수점(0~1)으로 설정됨 
+
+#용어: True,False,Positive,Negative
 
 #Receiver Operating Characteristic: 수신자 조작 특성, 이진 데이터에 쓰이며 가장 정확한 마스터 지표
 #진짜 범인(민감도,특이도)을 잡아내는 비율 vs 일반인(FPR)을 범인으로 오해하는 비율
@@ -146,12 +194,13 @@ plt.show()
 #FPR(False Positive Rate)거짓 양성 비율,(1-특이도):음성(일반인)을 양성(범인)으로 예측한 잘못된 경우
 
 #ROC Curve|
-#X:FPR, 얼마나 많이 음성(일반인)을 양성(범인)으로 오해했나 <낮으면 좋음> | Y:민감도, 얼마나 많이 양성(범인)을 양성(범인)으로 맞췄나 <높으면 좋음>
-#임계값(threshold)을 낮추면 FPR값이 오르는 동시에 민감도값도 같이 오름, 오해할 확률이 적어지지만, 범인을 찾지를 못함
-#임계값을 올리면 민감도값이 오르는 동시에 FPR값이 오름, 범인을 잘 걸러내지만, 일반인도 거를 수 있음
+#X:FPR, 얼마나 많이 음성(일반인)을 양성(범인)으로 오해했나 <생사람 잡은 비율> | Y:TPR 민감도, 얼마나 많이 양성(범인)을 양성(범인)으로 맞췄나 <진실을 맞춘 비율>
+#임계값(threshold)을 낮추면 양성값을 전부 잡을 수 있지만, 음성을 양성으로 오해하는 비율이 급증함
+#임계값을 올리면 민감도값이 떨어지는 동시에 FPR값도 떨어짐, 양성을 양성으로 잘 잡지만, 양성을 음성으로 판단할 수 있음
 
+#ROC Curve는 predict_proba모듈 내장어를 이용하여 생성되며, 생성된 그래프에서 Under Curve가 AUC로 잡힘
 
 #Area Under the Curve: 곡선 아래 면적: ROC그래프가 그려졌을 때, 아래의 면적을 계산한 값(1.0=만점)
 #AUC 출력범위: [0.5:쓰레기, 0.7~8:쓸만함, 0.9: 구분이 확실히 가능, 1.0: 완벽]
 
-#26.7.27
+#26.7.29
