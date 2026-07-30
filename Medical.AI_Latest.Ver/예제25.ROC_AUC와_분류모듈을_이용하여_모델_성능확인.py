@@ -67,7 +67,8 @@ q_total=info_gen+q_detail
 csv_load['total_result']=(q_total >= 3).astype(int) #col 생성
 #2. 파이프라인 활용 
 #조건과 같은 컬럼을 쓸 시 데이터 유출로 판단 
-X_cla=csv_load[['Gender','Age','GLU','HbA','BMI','SBP','DBP']]
+#당뇨병 여부, 거주 지역, 교육 수준 참고
+X_cla=csv_load[['Gender','Age','DM','Education','HP','DSP']]
 y_cla=csv_load['total_result']
 #일단 자료 나눠보자
 num_col=['Age','GLU','HbA','BMI','SBP','DBP']
@@ -78,7 +79,7 @@ merging_col_m=ColumnTransformer(
     transformers=[
         ('merging',stad_pp,num_col)
     ],
-    remainder='passthrough' #Age pass
+    remainder='passthrough' #범주형 데이터 패스
 )
 #3. 학습 및 튜닝
 X_train,X_test,y_train,y_test=train_test_split(X_cla,y_cla,test_size=0.2,random_state=42)
@@ -202,5 +203,24 @@ plt.show()
 
 #Area Under the Curve: 곡선 아래 면적: ROC그래프가 그려졌을 때, 아래의 면적을 계산한 값(1.0=만점)
 #AUC 출력범위: [0.5:쓰레기, 0.7~8:쓸만함, 0.9: 구분이 확실히 가능, 1.0: 완벽]
+#####################################################################################################################################
+#ROC_AUC 결과
+
+#EMR 전체 데이터셋: 정상 151, 고위험 23
+
+#확인하는 방법
+#수직 상승: TPR Rate Up | 수평: FPR Rate Up
+
+#ROC 파트
+#초반에는 양성을 양성으로 찾는 과정이 많았지만, 중후반부로 갈수록 음성을 양성으로 오해하는 비율이 높아짐
+
+#Thresholds 파트
+#임계값 0.1 지점을 찾았을 때| TPR:0.8 | FPR: 0.4
+#TPR 수치는 80%, 실제 양성 데이터 중 80%를 성공적으로 양성 데이터로 판단 
+#FPR 수치 40%, 실제 음성 데이터 중 40%를 음성 데이터를 양성으로 판단 (오진)
+
+#AUC 파트
+#0.5 AUC 밑으로 안 떨어진 걸 확인할 수 있음 -> 모델 성능이 Example 대각선 아래로 추락할 시 모델의 학습 또는 데이터를 물갈이
+
 
 #26.7.29
