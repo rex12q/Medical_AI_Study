@@ -24,7 +24,7 @@ plt.rcParams['font.family']='AppleGothic'
 plt.rcParams['axes.unicode_minus']=False
 
 #csv -> sav
-sav_file='Spss_sav/BP_Stat_Final_ExerData.sav'
+sav_file='Spss_sav/sample.sav'
 csv_file='csv/claude_sample.csv' 
 
 # try:
