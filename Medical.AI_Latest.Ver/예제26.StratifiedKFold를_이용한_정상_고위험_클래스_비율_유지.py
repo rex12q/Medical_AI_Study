@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
+from sklearn.pipeline import Pipeline
 #StratifiedKFold: 전체 데이터를 k개의 조각(fold)으로 나눈 뒤, 모든 조각이 한 번씩 검증 데이터 역할을 하도록 k번 평가를 반복하는 방식
 #train_test와 비교를 하면 딱 나누어진 학습,테스트 데이터가 Random Seed에 좌우될 수 있음
 from sklearn.model_selection import StratifiedKFold
@@ -90,7 +91,7 @@ skf=StratifiedKFold(
     random_state=42
 )
 
-#불균형 보정값: 음성/양성 비율 
+#불균형 보정값: 음성/양성 비율, 현재 sav파일에는 음성: 768, 양성 102 존재, 균형잡힌 가중치가 부여되기 위하여 값을 나누기
 neg, pos = (y_cla==0).sum(), (y_cla==1).sum()
 unb_rate= neg/pos
 print(f'양성 놓칠 시 음성 {unb_rate:.2f}명 틀린 만큼의 벌점 부여')
@@ -98,6 +99,9 @@ print(f'양성 놓칠 시 음성 {unb_rate:.2f}명 틀린 만큼의 벌점 부�
 #CrossValidataion (스케일링 Fold 안에서 하기)
 #X피처 0으로 전부 채우기 (S_KFold에 의해 전부 채워지기)
 zero_prob=np.zeros(len(X_cla)) # fold1: [0,0,...,0]
+
+#auc 정보 담기
+fold_auc=[]
 
 print('교차검증 시작 (KFold: 5)')
 #enumerate: 숫자 출력, start=1과 연관지으면 터미널 출력 시 0부터 출력되는 표시를 1로 표현하여 혼동 방지
@@ -109,10 +113,68 @@ for fold,(train_idx, test_idx) in enumerate(skf.split(X_cla,y_cla),start=1):
     st=StandardScaler()
     X_train=st.fit_transform(X_train) #fit하고 변환 
     X_test=st.transform(X_test) #fit 할 시 Leakage! 
+    
+    doctor= Pipeline(
+        [
+            #파이프라인 이용하여 별칭 부여
+            ('xgbc',XGBClassifier(
+        random_state=42,
+        #오진일 경우 오진값 비례, 로그 성질을 이용하여 패널티 부여
+        eval_metric='logloss',
+        #상황에 맞게 가중치 부여 조정
+        #양성 가중치 부여값: 7.53 (768/102)
+        scale_pos_weight=unb_rate,
+        #전체에서 80만 보고 학습(컨닝 방지)
+        subsample=0.8,
+        n_jobs=-1)
+        )
+        ]
+        )
 
-    doctor_x= XGBClassifier(
-        
+    #GridSearchCV
+    xgb_grid={
+        'xgbc__n_estimators':[100,200,500],
+        'xgbc__learning_rate':[0.001,0.05,0.1],
+        #colsample_bytree: tree당 피처에 대한 의존도 설정
+        'xgbc__colsample_bytree':[0.6,0.7,1.0],
+        'xgbc__max_depth':[2,3,5]
+    }
+
+    #CrossValidation 과정 층화KFold로 5번 학습
+    cv=StratifiedKFold(n_splits=5,shuffle=True,random_state=42)
+
+    #경우의 수가 100이상일 경우, RandomizedSearchCV를 씀
+    tuning_doctor=GridSearchCV(
+        estimator=doctor,
+        param_grid=xgb_grid,
+        #불균형 데이터 다룰 때 가장 '평균_정밀도' 사용
+        #AUC면적 축소, 정밀도 값 떨어짐 방지
+        scoring='average_precision',
+        cv=cv, #층화KFold로 교차검증 5번 진행
+        n_jobs=-1,
+        #best_estimator 최적의 값으로 refit
+        refit=True,
+        #훈련용 데이터만 외우고 임하는 경우(overfitting 진단용)
+        return_train_score=True
     )
+    tuning_doctor.fit(X_train_st,y_train)
+
+    #Predict_proba
+    #양성 예측 확률 (refit 적용됨)
+    best_prob=tuning_doctor.best_estimator_.predict_proba(X_test_st)[:,1]
+    #best_prob값에 맞춰서 test_idx 부여
+    zero_prob[test_idx]=best_prob
+    #auc 점수 fold_auc에 리스트로 담기
+    auc=roc_auc_score(y_test,best_prob)
+    fold_auc.append(auc)
+    print(f'FOLD {fold} | 학습 {len(train_idx)}명 / 테스트 {len(test_idx)}명'
+        f'| 테스트 양성 데이터 {y_test.sum()}명 ({y_test.mean()*100:.2f}% | AUC: {auc:.4f})')
+
+#fold별 AUC결과
+print('-'*70)
+print(f'Fold별 평균 AUC 데이터: {np.mean(fold_auc):.4f}')
+print('표준편차가 작을 수록 어떤 데이터를 학습해도 실력이 일정함')
+
 
 #KFold vs 층화
 #KFold: 무작위 분활(비율로 표시됨)이 진행된 후, K개의 Fold(칸)으로 나눈 후, 모든 Fold에 무작위 분할 비율값이 삽입-> 삽입된 모든 fold가 검증 데이터 역할 진행
@@ -124,5 +186,5 @@ for fold,(train_idx, test_idx) in enumerate(skf.split(X_cla,y_cla),start=1):
 #5회차까지 도출된 출력값들을 가지고 경우의 수 병합 -> 검증 편향 방지 및 모델의 객관적인 실력을 평가할 수 있음 (균형 데이터에서 가능)
 #train_test_split은 한 번 데이터 비율을 무작위로 나눈 후, Random Seed로 도출되는 방식이여서 방대하고 균등한 데이터셋일 때 사용 가능
 
-#26.8.10
+#26.8.11
 # %%
