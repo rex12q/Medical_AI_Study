@@ -171,9 +171,11 @@ for fold,(train_idx, test_idx) in enumerate(skf.split(X_cla,y_cla),start=1):
         f'| 테스트 양성 데이터 {y_test.sum()}명 ({y_test.mean()*100:.2f}% | AUC: {auc:.4f})')
 
 #fold별 AUC결과
+#fold에 기입된 AUC결과가 결국 fold별 AUC결과로 볼 수 있음
 print('-'*70)
-print(f'Fold별 평균 AUC 데이터: {np.mean(fold_auc):.4f}')
+print(f'Fold별 평균 AUC 데이터: {np.mean(fold_auc):.4f} | 표준편차: ±{np.std(fold_auc):.4f}')
 print('표준편차가 작을 수록 어떤 데이터를 학습해도 실력이 일정함')
+print(f'Fold 최고 기록값: {np.max(fold_auc):.4f} | Fold 최소 기록 값: {np.min(fold_auc):.4f}')
 
 
 #KFold vs 층화
@@ -186,5 +188,5 @@ print('표준편차가 작을 수록 어떤 데이터를 학습해도 실력이 
 #5회차까지 도출된 출력값들을 가지고 경우의 수 병합 -> 검증 편향 방지 및 모델의 객관적인 실력을 평가할 수 있음 (균형 데이터에서 가능)
 #train_test_split은 한 번 데이터 비율을 무작위로 나눈 후, Random Seed로 도출되는 방식이여서 방대하고 균등한 데이터셋일 때 사용 가능
 
-#26.8.11
+#26.8.12
 # %%
