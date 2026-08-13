@@ -177,6 +177,42 @@ print(f'Fold별 평균 AUC 데이터: {np.mean(fold_auc):.4f} | 표준편차: ±
 print('표준편차가 작을 수록 어떤 데이터를 학습해도 실력이 일정함')
 print(f'Fold 최고 기록값: {np.max(fold_auc):.4f} | Fold 최소 기록 값: {np.min(fold_auc):.4f}')
 
+#전체 데이터 보고 
+#ROC_AUC: 전체 데이터 양,음성 구분 비율 -> 그래서 기준선은 항상 0.5
+#PR_AUC:유병률(실제 데이터에서 진짜 환자 비율) -> y를 'DM'컬럼으로 둔 이융
+ex_auc=roc_auc_score(y_cla, zero_prob) #roc_auc
+ex_pr=average_precision_score(y_cla,zero_prob) #Prcision_Rate
+
+print('-'*50)
+print(f'ROC_AUC: {ex_auc:.4f}')
+print(f'PR: {ex_pr:.4f} | 기준선(유병률): {y_cla.mean():.4f} ')
+print('PR 값이 기준선보다 높을 경우 모델의 가치가 올라감 |' \
+'ROC_AUC는 불균형 데이터 학습할 시 편차가 심함.')
+
+#Best Thresholds | 윤덴의 J 공식을 이용하여 구해보자
+#데이터 유병률: 11.7 -> 0.5로 기준을 나눌 시, 양성을 놓칠 수 있음
+fpr,tpr,thresholds = roc_curve(y_cla, zero_prob)
+#np.argmax를 이용하여 값이 가장 높은 idx 출력
+best_idx=np.argmax(tpr-fpr) #민감도 - 특이도
+best_th=thresholds[best_idx] 
+
+print('-'*50)
+print(f'최적의 임계값: {best_th:.4f}')
+print(f'민감도 최고의 값: {tpr[best_idx]:.3f} | 특이도 최고의 값: {fpr[best_idx]:.3f}')
+print('-'*50)
+
+#분류 보고 결과 확인을 위해 이진으로 바꾸기
+pred_default=(zero_prob >= 0.5).astype(int)
+best_pred=(zero_prob >= best_th).astype(int)
+
+print('분류 보고')
+print('임계값 = 0.5일 때')  
+#분류 보고 진행 시, 'DM'열과 예측 결과 값 비교
+print(classification_report(y_cla, pred_default, target_names=['정상', '당뇨'],digits=3))
+print(f'임계값 = {best_th:.3f}일 떼')
+print(classification_report(y_cla, best_pred, target_names=['정상','당뇨'],digits=3))
+print('결과 중요도: Accuracy보다 Recall이 훨씬 중요함, 당뇨 판정같이 진짜 양성을 잡아야 하는 모델에서 진짜 양성 중 양성을 판단하는 확률이 낮으면 쓸 수 없음.')
+
 
 #KFold vs 층화
 #KFold: 무작위 분활(비율로 표시됨)이 진행된 후, K개의 Fold(칸)으로 나눈 후, 모든 Fold에 무작위 분할 비율값이 삽입-> 삽입된 모든 fold가 검증 데이터 역할 진행
@@ -188,5 +224,5 @@ print(f'Fold 최고 기록값: {np.max(fold_auc):.4f} | Fold 최소 기록 값: 
 #5회차까지 도출된 출력값들을 가지고 경우의 수 병합 -> 검증 편향 방지 및 모델의 객관적인 실력을 평가할 수 있음 (균형 데이터에서 가능)
 #train_test_split은 한 번 데이터 비율을 무작위로 나눈 후, Random Seed로 도출되는 방식이여서 방대하고 균등한 데이터셋일 때 사용 가능
 
-#26.8.12
+#26.8.13
 # %%
