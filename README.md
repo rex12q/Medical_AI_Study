@@ -1,9 +1,42 @@
-#의료 인공지능 기초(메인) 및 여러 가지 잡지식을 다지기 위한 뼈대
+#AI Study
+#Machine Learning, Deep Learning, Natural Language Processing..ETC
+
 -작성자: 나 자신
+
 -기간: 2025년 12월 11일 목요일 오후 2:09 ~ 현재까지
--내용: 파이썬 기초부터 머신러닝(Scikit-learn),그래프 띄우기, 파이프라인 설계, 단위가 다른 값들을 표준화(스탠다드스칼라), 회귀, 분류 방법, voting, spss(sav)|csv(EMR) 기반 ML학습,  이 외에 것들도 다루기 위한 학습 과정입니다.
--작성자의 생각: 솔직히 올릴까 말까 고민을 많이 했습니다. 누구나 다 짤 수 있고, 생각하고 표현할 수 있는 코드들이지만 저한테는 꼭 필요한 지식들을
-            공부하는 그 과정을 부끄럽게 생각을 했었습니다. 하지만 이건 실적 업무를 채우기 위한 '채워넣기' 코드들이 아닌 '성장 기록형'코드들을
-            기록 했습니다. 남들이 제 코드를 보면서 '왜 이런 걸 올리지?' 싶더라도 저는 저의 코드들을 올려 나중에 저애게 훌륭한 밑받침이 될 거라 믿고
-            한 번 Github에 올려보려고 합니다. 참고로 처음 코드 작성 시에는 github는 생각도 안 했기에 이제서야 올립니다!
-            별 거 아닌 긴 글 읽어주셔서 감사합니다..!
+
+-해당 프로젝트는 더미 의료 데이터를 가지고 진행되었으며, 실제 EMR 데이터를 무단으로 배포, 공유했을 경우 법적 책임을 져야 한다는 사실을 인지하고 있습니다.
+
+-프로젝트에 사용된 모든 모델은 의학적 진단 도구가 아닙니다.
+
+-주요 프로젝트
+무채혈 당뇨 스크리닝: 혈액 검사 없이 신체 계측치(BMI, 허리둘레, 혈압)만으로 당뇨 위험도 예측, 데이터 누수 방지를 위한 진단 기준 변수(공복혈당, 당화혈색소)를 피처에서 제외하고 설계
+
+대사증후군 환자 군집화: K-Means로 환자를 자동 분류, 진단 기준과 얼마나 일치하는 지 검증. AI가 임상 기준을 재현할 수 있는 지에 대한 실험
+
+SHAP(XAI) 기반 발병 원인 분석: XGBoost 예측 결과를 SHAP으로 해석, 어떤 지표가 대사증후군 판정에 기여했는지 시각화로 표현
+
+StratifiedKFold, ROC_AUC, PR_AUC를 이용해 클래스 비율 확인: 층화된 KFold를 이용하여 올바르게 데이터를 학습할 수 있도록 설계, ROC_AUC, PR_AUC를 이용하여 불균형 데이터인지 확인 및 모델 성능 평가(상세 내용은 Classification Report로 확인함) 
+
+-다루는 내용: 
+Module (Python)
+numpy 배열, pandas DF, matplotlib, seaborn 시각화 자료, pyreadstat
+
+Machine Learning (Python, Scikit Learn, XGB)
+LogisticRegression, DecisionTree, Support Vector Machine, Voting, RandomForest, metrics(분류,회귀에 따른 지표 공부), preprocessing, model_selection(상세 파라미터 튜닝, 데이터 분할), Pipeline, Compose(열 합치기), SimpleImputer, XAI(SHAP), Cluster(군집화, 비지도학습)
+
+Deep Learning (python, torch, tensorflow)
+Neural Network, tensor(데이터 담기), optim, Stochastic Gradient Descent, backward, Dataset(파이프라인 설계), DataLoader(효율적으로 데이터 옮기기), Relu, Sigmoid, Linear, callbacks, Dense, Dropout, metrics(분류, 회귀에 따른 지표 공부)
+
+Natural Language Processing (예제 파일은 DL 저장소에 있음)
+CountVectorizer, TfidVectorizer (텍스트,숫자 벡터 변환)
+
+-데이터 처리 및 활용
+SPSS .sav 파일을 이용하여 메타데이터 추출  
+임상 주제 기준에 기반한 모델 설계
+결측 데이터 정리 및 불균형 처리 과정 
+
+-이 저장소에 대하여
+처음부터 학습과정을 정하지 않고 가장 기본이 되는 지식부터 시작을 했습니다. 혼자 LLM 툴을 이용하여 공부를 한 기록을 뒤늦게 정리하여 올렸기에 위에 작성한 타임라인과 맞지 않습니다. 초기 예제와 최근 예제 사이에는 클래스 설계, 난이도 수준의 차이가 분명히 있습니다.
+그 차이를 삭제하지 않고 그대로 두었습니다. 데이터 누수를 모른 채 짠 코드도, 나중에 깨닫고 다시 설계한 코드도 함께 있습니다. 성능에 대한 평가와 왜 그렇게 흘러가는지 주석으로 남기는 것에 신경을 더 썼습니다. 이해하고 넘어가야 앞으로의 과정도 진행할 수 있기 때문입니다. 
+배포가 가능한 완성된 프로젝트가 아닙니다. 학습에 대한 프로젝트가 맞습니다. 긴 글 읽어주셔서 감사합니다.
