@@ -18,9 +18,9 @@ SHAP(XAI) 기반 발병 원인 분석: XGBoost 예측 결과를 SHAP으로 해�
 
 StratifiedKFold, ROC_AUC, PR_AUC를 이용해 클래스 비율 확인: 층화된 KFold를 이용하여 올바르게 데이터를 학습할 수 있도록 설계, ROC_AUC, PR_AUC를 이용하여 불균형 데이터인지 확인 및 모델 성능 평가(상세 내용은 Classification Report로 확인함) 
 
--다루는 내용: 
+-주로 다루는 내용: 
 Module (Python)
-numpy 배열, pandas DF, matplotlib, seaborn 시각화 자료, pyreadstat
+numpy, pandas, matplotlib, seaborn 시각화 자료, pyreadstat 
 
 Machine Learning (Python, Scikit Learn, XGB)
 LogisticRegression, DecisionTree, Support Vector Machine, Voting, RandomForest, metrics(분류,회귀에 따른 지표 공부), preprocessing, model_selection(상세 파라미터 튜닝, 데이터 분할), Pipeline, Compose(열 합치기), SimpleImputer, XAI(SHAP), Cluster(군집화, 비지도학습)
