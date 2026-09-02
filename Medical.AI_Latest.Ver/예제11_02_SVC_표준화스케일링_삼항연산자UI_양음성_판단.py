@@ -35,8 +35,8 @@ Y=db_df['risk']
 
 X_train,X_test,Y_train,Y_test=train_test_split(X,Y,test_size=0.25,random_state=42)
 #의사양반 
-doctor=make_pipeline( #매끈매끈하다 매끈매끈한 파이프라인으로 연결
-    StandardScaler(), #UFC 체급 맞추기 
+doctor=make_pipeline( #파이프라인으로 연결
+    StandardScaler(), #체급 맞추기 
     SVC(probability=True)
 )
 doctor.fit(X_train,Y_train) #계속 틀림(의사양반은 기출연습문제과 기출연습정답지를 보고 학습을 한다)
