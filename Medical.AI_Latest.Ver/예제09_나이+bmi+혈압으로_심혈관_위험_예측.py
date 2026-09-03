@@ -48,6 +48,7 @@ u_sysbp=int(input('수축기 혈압 입력'))
 new_data=pd.DataFrame([[u_age,u_bmi,u_sysbp]], columns=['age', 'bmi', 'sysbp'])#ML은 항상 2차원 배열을 요구
 new_pred=model.predict(new_data)[0]#사용자 데이터 인덱스 (음성,양성 예측)
 new_proba=model.predict_proba(new_data)[0][1]#사용자 데이터 인덱스랑 사용자가 양성인 지
+#new_data는 사용자의 정보이다. all_df에 정보가 기록되는 것이 아니고 new_data에 DF형태로 model이 preidct를 진행하여 결과를 출력함
 
 if new_pred == 0:
     print('사용자는 음성입니다.')
